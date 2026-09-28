@@ -1,0 +1,33 @@
+# python virtual environments
+backend/.venv/
+.venv/
+venv/
+
+# python cache files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# local environment files and secrets
+.env
+.env.*
+!.env.example
+
+# node and react files
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+
+# editor and operating system files
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# local logs
+*.log
+
+# temporary files
+*.tmp
+*.temp

@@ -1,0 +1,97 @@
+:root {
+  --color-primary: #4f46e5;
+  --color-primary-dark: #4338ca;
+  --color-accent: #7c3aed;
+  --color-accent-light: #a78bfa;
+  --gradient-brand: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  --font-heading: 'Poppins', 'Segoe UI', sans-serif;
+  --font-body: 'Inter', 'Segoe UI', sans-serif;
+}
+
+body {
+  background-color: #f4f5fb;
+  font-family: var(--font-body);
+  color: #262a3d;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+a {
+  color: var(--color-primary);
+}
+a:hover {
+  color: var(--color-accent);
+}
+
+/* Layout helpers used across pages */
+.page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.form-card {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+/* Navbar */
+.navbar-brand {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.navbar-gradient {
+  background: var(--gradient-brand);
+}
+
+/* Cards */
+.card {
+  border: none;
+  border-radius: 16px;
+}
+
+/* Gradient text for hero headings */
+.text-gradient {
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Bootstrap overrides: swap the default blue for the brand palette */
+.btn-primary {
+  background: var(--gradient-brand);
+  border: none;
+}
+.btn-primary:hover,
+.btn-primary:focus {
+  background: var(--color-primary-dark);
+  border: none;
+}
+.btn-primary:disabled {
+  background: var(--color-accent-light);
+  border: none;
+}
+
+.btn-outline-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.btn-outline-primary:hover {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.form-control:focus {
+  border-color: var(--color-accent-light);
+  box-shadow: 0 0 0 0.2rem rgba(124, 58, 237, 0.15);
+}
+
+.nav-link:hover {
+  color: #ffffff !important;
+}

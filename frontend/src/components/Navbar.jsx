@@ -45,6 +45,25 @@ export default function Navbar() {
                     Dashboard
                   </Link>
                 </li>
+                {user.role === 'student' && (
+                  <>
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/events">
+                        Events
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/events/registered">
+                        My events
+                      </Link>
+                    </li>
+                    <li className="nav-item">
+                      <Link className="nav-link" to="/assistant">
+                        Assistant
+                      </Link>
+                    </li>
+                  </>
+                )}
                 <li className="nav-item">
                   <span className="nav-link text-white-50">{user.email}</span>
                 </li>

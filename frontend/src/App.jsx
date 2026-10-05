@@ -8,6 +8,9 @@ import StudentSignup from './pages/StudentSignup.jsx'
 import CompanySignup from './pages/CompanySignup.jsx'
 import StudentDashboard from './pages/StudentDashboard.jsx'
 import CompanyDashboard from './pages/CompanyDashboard.jsx'
+import StudentEvents from './pages/StudentEvents.jsx'
+import StudentRegisteredEvents from './pages/StudentRegisteredEvents.jsx'
+import AssistantChat from './pages/AssistantChat.jsx'
 
 export default function App() {
   return (
@@ -31,6 +34,30 @@ export default function App() {
           element={
             <ProtectedRoute role="company">
               <CompanyDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events"
+          element={
+            <ProtectedRoute role="student">
+              <StudentEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/registered"
+          element={
+            <ProtectedRoute role="student">
+              <StudentRegisteredEvents />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assistant"
+          element={
+            <ProtectedRoute role="student">
+              <AssistantChat />
             </ProtectedRoute>
           }
         />

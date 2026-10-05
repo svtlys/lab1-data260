@@ -6,6 +6,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.auth import router as auth_router
+from app.api.routes.assistant import router as assistant_router
+from app.api.routes.events import router as events_router
 from app.api.routes.student_profile import router as student_profile_router
 
 
@@ -37,6 +39,12 @@ app.include_router(auth_router)
 
 # make the protected student profile endpoints available
 app.include_router(student_profile_router)
+
+# make the protected student event endpoints available
+app.include_router(events_router)
+
+# make the protected assistant endpoint available
+app.include_router(assistant_router)
 
 
 @app.get("/")

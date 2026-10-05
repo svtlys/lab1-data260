@@ -1,138 +1,142 @@
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import * as companyService from '../services/companyService'
-import { useAuth } from '../context/AuthContext.jsx'
 import { extractErrorMessage } from '../services/api'
+import { formatDate, todayISO } from '../utils/format'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
+import EmptyState from '../components/EmptyState.jsx'
 
-const emptyProfile = {
-  company_name: '',
-  location: '',
-  description: '',
-  contact_info: '',
+// A headline number with a quiet label. Plain ink on purpose: colour is saved
+// for things that carry meaning (status badges), not for decoration.
+function StatTile({ label, value }) {
+  return (
+    <div className="col-6 col-md-3">
+      <div className="card shadow-sm h-100">
+        <div className="card-body">
+          <div className="text-muted small">{label}</div>
+          <div className="display-6 fw-semibold">{value}</div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function CompanyDashboard() {
-  const { user } = useAuth()
-  const [form, setForm] = useState(emptyProfile)
+  const [profile, setProfile] = useState(null)
+  const [jobs, setJobs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [endpointMissing, setEndpointMissing] = useState(false)
-  const [saveMessage, setSaveMessage] = useState('')
+  const [profileError, setProfileError] = useState('')
+  const [jobsError, setJobsError] = useState('')
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError('')
-    companyService
-      .getMyCompanyProfile()
-      .then((data) => {
-        if (cancelled) return
-        setForm({ ...emptyProfile, ...data })
-      })
-      .catch((err) => {
-        if (cancelled) return
-        if (err.response && err.response.status === 404) {
-          // The backend doesn't have this route yet -- expected until
-          // your partner adds GET/PUT /api/companies/me.
-          setEndpointMissing(true)
-        } else {
-          setError(extractErrorMessage(err, 'Could not load your company profile.'))
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+
+    async function load() {
+      // Load both at once; if one fails the other still shows.
+      const [profileResult, jobsResult] = await Promise.allSettled([
+        companyService.getMyCompanyProfile(),
+        companyService.getMyJobs(),
+      ])
+      if (cancelled) return
+
+      if (profileResult.status === 'fulfilled') {
+        setProfile(profileResult.value)
+      } else {
+        setProfileError(extractErrorMessage(profileResult.reason, 'Could not load your company profile.'))
+      }
+      if (jobsResult.status === 'fulfilled') {
+        setJobs(jobsResult.value)
+      } else {
+        setJobsError(extractErrorMessage(jobsResult.reason, 'Could not load your job postings.'))
+      }
+      setLoading(false)
+    }
+
+    load()
     return () => {
       cancelled = true
     }
   }, [])
 
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setSaving(true)
-    setError('')
-    setSaveMessage('')
-    try {
-      await companyService.updateMyCompanyProfile(form)
-      setSaveMessage('Profile saved.')
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Could not save your company profile.'))
-    } finally {
-      setSaving(false)
-    }
-  }
+  const today = todayISO()
+  const activeCount = jobs.filter((j) => j.deadline && j.deadline >= today).length
+  const totalApplicants = jobs.reduce((sum, j) => sum + (Number(j.applicant_count) || 0), 0)
+  const awaitingReview = jobs.reduce((sum, j) => sum + (Number(j.pending_count) || 0), 0)
+  // Only show the "awaiting review" tile if the backend sends pending counts at all.
+  const hasPendingCounts = jobs.some((j) => typeof j.pending_count === 'number')
+  const recent = [...jobs].sort((a, b) => (b.id || 0) - (a.id || 0)).slice(0, 5)
 
   return (
     <div className="page-container">
-      <h2 className="mb-4">Company dashboard</h2>
-      <p className="text-muted">Signed in as {user?.email}</p>
+      <div className="mb-4">
+        <h2 className="mb-1">{profile && profile.company_name ? profile.company_name : 'Company dashboard'}</h2>
+        {profile && profile.location && <div className="text-muted">{profile.location}</div>}
+      </div>
 
-      {loading && <LoadingSpinner label="Loading your company profile..." />}
-      <ErrorAlert message={error} />
-
-      {endpointMissing && !loading && (
-        <div className="alert alert-warning">
-          The backend doesn&apos;t expose <code>/api/companies/me</code> yet, so this form can&apos;t
-          load or save real data yet -- it&apos;s built and ready for as soon as that endpoint exists.
-        </div>
-      )}
+      {loading && <LoadingSpinner label="Loading your dashboard..." />}
+      <ErrorAlert message={profileError} />
 
       {!loading && (
-        <div className="card shadow-sm">
-          <div className="card-body p-4">
-            {saveMessage && <div className="alert alert-success">{saveMessage}</div>}
-            <form onSubmit={handleSubmit} className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label">Company name</label>
-                <input
-                  className="form-control"
-                  name="company_name"
-                  value={form.company_name || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-md-6">
-                <label className="form-label">Location</label>
-                <input
-                  className="form-control"
-                  name="location"
-                  value={form.location || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Description</label>
-                <textarea
-                  className="form-control"
-                  name="description"
-                  rows={3}
-                  value={form.description || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label">Contact information</label>
-                <input
-                  className="form-control"
-                  name="contact_info"
-                  value={form.contact_info || ''}
-                  onChange={handleChange}
-                />
-              </div>
-              <div className="col-12">
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Saving...' : 'Save profile'}
-                </button>
-              </div>
-            </form>
+        <>
+          <ErrorAlert message={jobsError} />
+
+          {!jobsError && (
+            <div className="row g-3 mb-4">
+              <StatTile label="Active postings" value={activeCount} />
+              <StatTile label="Total postings" value={jobs.length} />
+              <StatTile label="Total applicants" value={totalApplicants} />
+              {hasPendingCounts && <StatTile label="Awaiting review" value={awaitingReview} />}
+            </div>
+          )}
+
+          <div className="d-flex flex-wrap gap-2 mb-4">
+            <Link to="/company/jobs/new" className="btn btn-primary">
+              Post a job
+            </Link>
+            <Link to="/company/jobs" className="btn btn-outline-primary">
+              All my jobs
+            </Link>
+            <Link to="/company/profile" className="btn btn-outline-primary">
+              Edit company profile
+            </Link>
           </div>
-        </div>
+
+          {!jobsError && (
+            <div className="card shadow-sm">
+              <div className="card-body pb-0">
+                <h5 className="mb-0">Recent postings</h5>
+              </div>
+              {recent.length === 0 ? (
+                <EmptyState
+                  title="No job postings yet"
+                  message="Post a job to start receiving applications."
+                />
+              ) : (
+                <ul className="list-group list-group-flush mt-3">
+                  {recent.map((job) => (
+                    <li
+                      key={job.id}
+                      className="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2"
+                    >
+                      <div>
+                        <Link to={`/company/jobs/${job.id}/applicants`} className="fw-semibold">
+                          {job.title}
+                        </Link>
+                        <div className="small text-muted">
+                          {job.category} &middot; {job.location} &middot; Deadline {formatDate(job.deadline)}
+                        </div>
+                      </div>
+                      <div className="text-muted">
+                        {job.applicant_count ?? 0} applicant{(job.applicant_count ?? 0) === 1 ? '' : 's'}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-# Handshake Frontend -- Pair 16 (9/28/26)
+# Handshake Frontend -- Pair 16
 
 React frontend for the Lab 1 Handshake platform. Built against the Week 1
 backend handoff from your partner.
@@ -36,19 +36,41 @@ src/
   main.jsx              entry point, wraps the app in AuthProvider + BrowserRouter
   App.jsx                route table
   context/AuthContext.jsx  holds the logged-in user + token, backed by localStorage
+  constants.js            job categories, application statuses, CITY_SET (one place to change)
   components/
-    Navbar.jsx            role-aware nav bar
+    Navbar.jsx            role-aware nav bar with a working mobile menu
     ProtectedRoute.jsx     redirects to /login (or the right dashboard) as needed
-    LoadingSpinner.jsx / ErrorAlert.jsx   shared loading/error UI
+    FormField.jsx          labelled input/select/textarea with inline validation errors
+    StatusBadge.jsx / EmptyState.jsx / LoadingSpinner.jsx / ErrorAlert.jsx   shared UI
   services/
-    api.js                 single axios instance: attaches Bearer token, extracts error messages
+    api.js                 single axios instance: Bearer token, 401 -> forced logout, error messages
     authService.js          signup (student/company), login, logout
     studentService.js       GET/PUT /api/students/me
-    companyService.js       GET/PUT /api/companies/me (see note below)
+    companyService.js       company profile, jobs, applicants, status, resume (proposed API)
+  utils/
+    validation.js          form validators + cleanPayload (blank -> null)
+    format.js              date and salary formatting
   pages/
-    Home.jsx, Login.jsx, StudentSignup.jsx, CompanySignup.jsx
-    StudentDashboard.jsx, CompanyDashboard.jsx
+    Home.jsx, Login.jsx, StudentSignup.jsx, CompanySignup.jsx, NotFound.jsx
+    StudentDashboard.jsx
+    CompanyDashboard.jsx, CompanyProfile.jsx, CreateJob.jsx, MyJobs.jsx,
+    JobApplicants.jsx, StudentProfileView.jsx
+docs/
+  company-api-contract.md  endpoints the company pages expect from the backend
 ```
+
+## Company workflow routes (Week 2)
+
+| Route | Page |
+|---|---|
+| `/dashboard/company` | Summary tiles and recent postings |
+| `/company/profile` | View and edit company profile |
+| `/company/jobs` | Jobs this company posted |
+| `/company/jobs/new` | Post a job |
+| `/company/jobs/:jobId/applicants` | Applicants, status changes, resume preview |
+| `/company/students/:studentId` | Read-only student profile |
+
+All of them are wrapped in `ProtectedRoute role="company"`.
 
 ## Auth flow (matches the backend handoff)
 
@@ -61,19 +83,18 @@ src/
 5. Logout just clears `localStorage` -- there's no backend logout endpoint
    since this is stateless JWT.
 
-## Known gap: company profile endpoint
+## Known gap: the company API is a proposal
 
-The Week 1 backend handoff only documents student profile endpoints
-(`GET`/`PUT /api/students/me`). `CompanyDashboard.jsx` and
-`companyService.js` assume a matching `/api/companies/me` pair so the page
-has something to render, and the dashboard shows a plain warning banner
-if that route 404s instead of crashing. Confirm the actual path and field
-names with your partner before Part A grading, and update
-`companyService.js` if it differs.
+The backend currently has only the auth and student-profile routes. The company
+pages are built against the endpoints in `docs/company-api-contract.md`, which
+your partner needs to confirm or change. Until a route exists, the page shows
+"The backend doesn't have this endpoint yet (GET /api/...)" instead of crashing.
+Paths and shapes live in `src/services/companyService.js`; category and status
+values live in `src/constants.js`.
 
-## What's still open for Week 1
+## What's still open
 
-- Wire in job search / event pages once those backend routes exist.
-- Company job-posting dashboard views (Part A company features beyond auth).
-- Swap the placeholder Bootstrap styling for whatever layout you settle on
-  as a pair.
+- Student workflow pages (job search, filters, apply with resume, application
+  status) are your partner's Week 2 work.
+- Company events tab and student search (Part A) are not built yet.
+- Check in with your partner on the contract's "Decisions to agree on" list.

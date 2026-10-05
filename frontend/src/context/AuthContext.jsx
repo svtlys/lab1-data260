@@ -7,7 +7,8 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-
+  // On first load, restore whatever we already had in localStorage so a
+  // page refresh doesn't kick the user back to the login page.
   useEffect(() => {
     const storedUser = localStorage.getItem('user')
     const storedToken = localStorage.getItem('access_token')
@@ -19,6 +20,15 @@ export function AuthProvider({ children }) {
       }
     }
     setLoading(false)
+  }, [])
+
+  // api.js fires this when the backend rejects our token (401).
+  useEffect(() => {
+    function handleForcedLogout() {
+      setUser(null)
+    }
+    window.addEventListener('auth:logout', handleForcedLogout)
+    return () => window.removeEventListener('auth:logout', handleForcedLogout)
   }, [])
 
   async function login(email, password) {

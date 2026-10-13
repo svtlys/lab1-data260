@@ -10,10 +10,12 @@ import ErrorAlert from '../components/ErrorAlert.jsx'
 
 const emptyJob = () => ({
   title: '',
-  category: '',
-  location: '',
-  salary: '',
-  posting_date: todayISO(),
+  employment_type: '',
+  city: '',
+  is_remote: false,
+  salary_min: '',
+  salary_max: '',
+  required_skills: '',
   deadline: '',
   description: '',
 })
@@ -26,7 +28,8 @@ export default function CreateJob() {
   const [submitError, setSubmitError] = useState('')
 
   function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value })
+    const { name, type, checked, value } = e.target
+    setForm({ ...form, [name]: type === 'checkbox' ? checked : value })
   }
 
   async function handleSubmit(e) {
@@ -38,7 +41,10 @@ export default function CreateJob() {
     if (hasErrors(found)) return
 
     const payload = cleanPayload(form)
-    payload.salary = payload.salary === null ? null : Number(payload.salary)
+    ;['salary_min', 'salary_max'].forEach((key) => {
+      payload[key] = payload[key] === null ? null : Number(payload[key])
+    })
+    // The server fills in posted_at and company_id (from the login token).
 
     setSubmitting(true)
     try {
@@ -72,15 +78,15 @@ export default function CreateJob() {
             <div className="row">
               <div className="col-md-6">
                 <FormField
-                  label="Category"
-                  name="category"
+                  label="Job type"
+                  name="employment_type"
                   as="select"
-                  value={form.category}
+                  value={form.employment_type}
                   onChange={handleChange}
-                  error={errors.category}
+                  error={errors.employment_type}
                   required
                 >
-                  <option value="">Choose a category...</option>
+                  <option value="">Choose a type...</option>
                   {JOB_CATEGORIES.map((category) => (
                     <option key={category} value={category}>
                       {category}
@@ -90,47 +96,63 @@ export default function CreateJob() {
               </div>
               <div className="col-md-6">
                 <FormField
-                  label="Location"
-                  name="location"
-                  value={form.location}
+                  label="City"
+                  name="city"
+                  as="select"
+                  value={form.city}
                   onChange={handleChange}
-                  error={errors.location}
+                  error={errors.city}
                   required
-                  maxLength={150}
-                  list="city-suggestions"
-                  autoComplete="off"
-                />
-                <datalist id="city-suggestions">
-                  {[...CITY_SET, 'Remote'].map((city) => (
-                    <option key={city} value={city} />
+                >
+                  <option value="">Choose a city...</option>
+                  {CITY_SET.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
                   ))}
-                </datalist>
+                </FormField>
               </div>
+            </div>
+
+            <div className="form-check mb-3">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="field-is_remote"
+                name="is_remote"
+                checked={form.is_remote}
+                onChange={handleChange}
+              />
+              <label className="form-check-label" htmlFor="field-is_remote">
+                Remote-friendly
+              </label>
             </div>
 
             <div className="row">
               <div className="col-md-4">
                 <FormField
-                  label="Salary (USD per year)"
-                  name="salary"
+                  label="Salary minimum (USD / year)"
+                  name="salary_min"
                   type="number"
                   min="0"
-                  step="1"
-                  value={form.salary}
+                  step="1000"
+                  value={form.salary_min}
                   onChange={handleChange}
-                  error={errors.salary}
+                  error={errors.salary_min}
                   help="Optional."
                 />
               </div>
               <div className="col-md-4">
                 <FormField
-                  label="Posting date"
-                  name="posting_date"
-                  type="date"
-                  value={form.posting_date}
+                  label="Salary maximum (USD / year)"
+                  name="salary_max"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={form.salary_max}
                   onChange={handleChange}
-                  error={errors.posting_date}
-                  required
+                  error={errors.salary_max}
+                  help="Optional."
                 />
               </div>
               <div className="col-md-4">
@@ -142,10 +164,20 @@ export default function CreateJob() {
                   onChange={handleChange}
                   error={errors.deadline}
                   required
-                  min={form.posting_date || undefined}
+                  min={todayISO()}
                 />
               </div>
             </div>
+
+            <FormField
+              label="Required skills"
+              name="required_skills"
+              value={form.required_skills}
+              onChange={handleChange}
+              error={errors.required_skills}
+              help="Comma-separated, e.g. Python, SQL, React."
+              maxLength={500}
+            />
 
             <FormField
               label="Description"

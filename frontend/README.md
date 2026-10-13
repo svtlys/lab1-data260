@@ -55,6 +55,7 @@ src/
     StudentDashboard.jsx
     CompanyDashboard.jsx, CompanyProfile.jsx, CreateJob.jsx, MyJobs.jsx,
     JobApplicants.jsx, StudentProfileView.jsx
+    CompanyEvents.jsx, CreateEvent.jsx, EventRegistrations.jsx   (Week 3)
 docs/
   company-api-contract.md  endpoints the company pages expect from the backend
 ```
@@ -69,6 +70,9 @@ docs/
 | `/company/jobs/new` | Post a job |
 | `/company/jobs/:jobId/applicants` | Applicants, status changes, resume preview |
 | `/company/students/:studentId` | Read-only student profile |
+| `/company/events` | Events this company created, with registration counts |
+| `/company/events/new` | Create an event, including eligibility rules |
+| `/company/events/:eventId/registrations` | Registered students with an eligibility verdict |
 
 All of them are wrapped in `ProtectedRoute role="company"`.
 
@@ -96,5 +100,5 @@ values live in `src/constants.js`.
 
 - Student workflow pages (job search, filters, apply with resume, application
   status) are your partner's Week 2 work.
-- Company events tab and student search (Part A) are not built yet.
+- The company jobs/events/applications backend routes are listed in `docs/company-api-contract.md` (v2).
 - Check in with your partner on the contract's "Decisions to agree on" list.

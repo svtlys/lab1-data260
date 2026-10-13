@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import * as companyService from '../services/companyService'
 import { extractErrorMessage } from '../services/api'
-import { formatDate, formatSalary, todayISO } from '../utils/format'
+import { formatDate, formatSalaryRange, todayISO } from '../utils/format'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 import EmptyState from '../components/EmptyState.jsx'
@@ -68,11 +68,11 @@ export default function MyJobs() {
               <thead>
                 <tr>
                   <th>Title</th>
-                  <th>Category</th>
-                  <th>Location</th>
+                  <th>Type</th>
+                  <th>City</th>
                   <th>Posted</th>
                   <th>Deadline</th>
-                  <th className="text-end">Salary</th>
+                  <th className="text-end">Salary range</th>
                   <th className="text-center">Applicants</th>
                 </tr>
               </thead>
@@ -84,16 +84,19 @@ export default function MyJobs() {
                         {job.title}
                       </Link>
                     </td>
-                    <td>{job.category}</td>
-                    <td>{job.location}</td>
-                    <td>{formatDate(job.posting_date)}</td>
+                    <td>{job.employment_type}</td>
+                    <td>
+                      {job.city}
+                      {job.is_remote ? <span className="badge bg-light text-dark border ms-2">Remote</span> : null}
+                    </td>
+                    <td>{formatDate(job.posted_at)}</td>
                     <td>
                       {formatDate(job.deadline)}
                       {job.deadline && job.deadline < today && (
                         <span className="badge bg-light text-dark border ms-2">Past deadline</span>
                       )}
                     </td>
-                    <td className="text-end">{formatSalary(job.salary)}</td>
+                    <td className="text-end">{formatSalaryRange(job.salary_min, job.salary_max)}</td>
                     <td className="text-center">
                       {job.applicant_count ?? 0}
                       {job.pending_count > 0 && (

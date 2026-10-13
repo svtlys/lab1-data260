@@ -124,7 +124,7 @@ export default function CompanyDashboard() {
                           {job.title}
                         </Link>
                         <div className="small text-muted">
-                          {job.category} &middot; {job.location} &middot; Deadline {formatDate(job.deadline)}
+                          {job.employment_type} &middot; {job.city} &middot; Deadline {formatDate(job.deadline)}
                         </div>
                       </div>
                       <div className="text-muted">

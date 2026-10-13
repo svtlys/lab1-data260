@@ -27,3 +27,22 @@ export function formatSalary(value) {
     maximumFractionDigits: 0,
   })
 }
+
+// "$90,000 - $120,000", "From $90,000", "Up to $120,000" or "Not listed".
+export function formatSalaryRange(min, max) {
+  const has = (v) => v !== null && v !== undefined && v !== ''
+  if (has(min) && has(max)) return `${formatSalary(min)} - ${formatSalary(max)}`
+  if (has(min)) return `From ${formatSalary(min)}`
+  if (has(max)) return `Up to ${formatSalary(max)}`
+  return 'Not listed'
+}
+
+// "Oct 20, 2026, 3:00 PM" from an ISO datetime such as "2026-10-20T15:00:00".
+export function formatDateTime(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return String(value)
+  return date.toLocaleString('en-US', {
+    year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+  })
+}

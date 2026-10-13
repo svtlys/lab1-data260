@@ -8,12 +8,18 @@ const GUEST_LINKS = [
   { to: '/signup/company', label: 'Company sign up' },
 ]
 
-const STUDENT_LINKS = [{ to: '/dashboard/student', label: 'Dashboard' }]
+const STUDENT_LINKS = [
+  { to: '/dashboard/student', label: 'Dashboard' },
+  { to: '/events', label: 'Events' },
+  { to: '/events/registered', label: 'My events' },
+  { to: '/assistant', label: 'Assistant' },
+]
 
 const COMPANY_LINKS = [
   { to: '/dashboard/company', label: 'Dashboard' },
   { to: '/company/jobs', label: 'My jobs' },
   { to: '/company/jobs/new', label: 'Post a job' },
+  { to: '/company/events', label: 'Events' },
   { to: '/company/profile', label: 'Profile' },
 ]
 

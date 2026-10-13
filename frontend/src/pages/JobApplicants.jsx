@@ -117,7 +117,7 @@ export default function JobApplicants() {
           <div className="mt-3 mb-4">
             <h2 className="mb-1">{job.title}</h2>
             <div className="text-muted">
-              {job.category} &middot; {job.location} &middot; Deadline {formatDate(job.deadline)}
+              {job.employment_type} &middot; {job.city} &middot; Deadline {formatDate(job.deadline)}
             </div>
           </div>
 

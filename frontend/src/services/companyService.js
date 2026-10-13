@@ -55,3 +55,25 @@ export function getApplicationResume(applicationId) {
 export function getApplicantProfile(studentId) {
   return api.get(`/api/students/${seg(studentId)}`).then((res) => res.data)
 }
+
+// ---- Events (Week 3) ----
+
+export function createEvent(payload) {
+  return api.post('/api/companies/me/events', payload).then((res) => res.data)
+}
+
+export function getMyEvents() {
+  return api.get('/api/companies/me/events').then((res) => toList(res.data))
+}
+
+export function getMyEvent(eventId) {
+  return api.get(`/api/companies/me/events/${seg(eventId)}`).then((res) => res.data)
+}
+
+// Students registered for one of this company's events, each with an
+// eligibility verdict: { eligible: boolean, ineligible_reasons: string[] }.
+export function getEventRegistrations(eventId) {
+  return api
+    .get(`/api/companies/me/events/${seg(eventId)}/registrations`)
+    .then((res) => toList(res.data))
+}

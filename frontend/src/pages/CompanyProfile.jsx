@@ -11,7 +11,6 @@ const FIELDS = [
   'company_name',
   'location',
   'description',
-  'contact_email',
   'contact_phone',
   'profile_picture_url',
 ]
@@ -153,16 +152,6 @@ export default function CompanyProfile() {
               />
 
               <div className="row">
-                <div className="col-md-6">
-                  <FormField
-                    label="Contact email"
-                    name="contact_email"
-                    type="email"
-                    value={form.contact_email}
-                    onChange={handleChange}
-                    error={errors.contact_email}
-                  />
-                </div>
                 <div className="col-md-6">
                   <FormField
                     label="Contact phone"

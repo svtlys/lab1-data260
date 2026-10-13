@@ -1,0 +1,3 @@
+"""
+hand-built assistant components.
+"""

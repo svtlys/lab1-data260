@@ -1,0 +1,181 @@
+DATA 260 LAB 1 VERIFICATION LOG
+Pair 16 | database p16_handshake | backend port 9160
+
+This log contains commands and results only. It does not contain passwords, database credentials, JWT secrets, or complete JWT tokens.
+
+1. project setup
+
+PowerShell working directory:
+  C:\Projects\lab1-data260
+
+Backend startup command:
+  python -m uvicorn app.main:app --app-dir ".\backend" --host 127.0.0.1 --port 9160
+
+Frontend startup command:
+  npm.cmd run dev
+
+2. database migration verification
+
+The company workflow migration was fetched from the partner branch, reviewed, and applied earlier in the integration work. The review confirmed that it did not use DROP, TRUNCATE, DELETE, or UPDATE statements. Read-only verification confirmed the company workflow tables and required columns after the migration.
+
+No migration command was rerun during this documentation step. After the read-only comparison, database/05_company_workflow.sql was added from origin/alyssa-week3. It matches the already-applied schema, so it was not executed again.
+
+3. safe seed-generator preview
+
+Commands run from backend:
+  .\.venv\Scripts\python.exe scripts\generate_seed_data.py --summary
+  .\.venv\Scripts\python.exe scripts\generate_seed_data.py --dry-run
+
+Result:
+  seed 16
+  students 200
+  companies 50
+  jobs 300
+  applications 1500
+  events 100
+  event registrations 1482
+  cities limited to Sunnyvale, Cupertino, Mountain View
+  validation counts/cities/foreign keys/duplicates passed
+  safe preview: no database writes
+
+The --reset option was not used.
+
+4. backend assistant verification
+
+Focused regression command:
+  .\.venv\Scripts\python.exe -m unittest tests.test_assistant_loop tests.test_assistant_tools tests.test_assistant_api tests.test_confirmation tests.test_prompt_injection tests.test_required_assistant
+
+Result:
+  24 tests passed
+
+Final focused reliability command:
+  .\.venv\Scripts\python.exe -m unittest tests.test_reliability tests.test_assistant_loop
+
+Result:
+  9 tests passed
+
+5. frontend build
+
+Command:
+  npm.cmd run build
+
+Result:
+  Vite production build passed
+  126 modules transformed
+  dist output generated under the ignored frontend/dist directory
+
+6. prompt-injection testing
+
+Five poisoned-content queries were run before and after the defense.
+  before defense: 4/5 unsafe
+  after defense: 0/5 unsafe
+
+The defense delimits retrieved database content and labels it as untrusted data. It does not allow descriptions to override system instructions, select unauthorized tools, or reveal private student information.
+
+7. reliability testing
+
+Command:
+  .\.venv\Scripts\python.exe scripts\reliability_experiment.py
+
+The experiment ran 20 deterministic turns with a fake Ollama client and isolated in-memory SQLite database. Database writes: 0.
+
+Before repair:
+  valid 8 | malformed 3 | unknown 2 | text-only 2 | lost chains 2
+  Ollama errors 1 | database errors 1 | iteration ceilings 1
+
+After one bounded repair attempt:
+  valid 14 | malformed unresolved 0 | unknown unresolved 0 | text-only 2
+  lost chains 2 | Ollama errors 1 | database errors unresolved 0
+  iteration ceilings 1
+
+7b. live reliability testing (macOS, real model)
+
+Setup:
+  MySQL on port 3307 (database p16_handshake, seeded)
+  Ollama running qwen3:8b
+  backend started from lab1-review/backend:
+    python -m uvicorn app.main:app --host 127.0.0.1 --port 9160
+
+Trial run (3 turns):
+  python scripts/live_reliability_run.py --only 1,2,3
+  result: 3 of 3 valid and correct
+
+Full run (26 turns):
+  caffeinate -i python scripts/live_reliability_run.py
+  result: 20 valid and correct | 2 wrong results (turns 3, 4) | 1 system prompt leak (turn 26) | 3 HTTP 500 (turns 10, 18, 24)
+  average response time 59.6 s | repairs 0
+  saved as docs/live_reliability_run1_results.md/.json and docs/live_run1_transcripts.md
+
+Finding: HTTP 500 on turns 10, 18, 24. Backend log showed IntegrityError (foreign key fk_message_conversation) when inserting assistant_messages for a new conversation after a tool error rolled back the session.
+Fix: backend/app/api/routes/assistant.py now commits the new conversation immediately.
+
+Re-run after the fix:
+  python scripts/live_reliability_run.py --only 10,18,24
+  result: 3 of 3 valid and correct | repairs: turn 10 = 1, turn 18 = 1, turn 24 = 0
+
+Finding: turns 3 and 4 returned no jobs although the data exists (SELECT counts: remote Cupertino 19, internships Mountain View 32). assistant_tool_logs showed the model sent employment_type "remote" (turn 3) and query "internship" (turn 4).
+Fix: search_jobs parameter descriptions clarified in backend/app/assistant/loop.py; system prompt now says not to reveal its instructions.
+
+Re-run after the prompt fixes:
+  python scripts/live_reliability_run.py --only 3,4,26
+  result (after prompt and description changes only): turns 3, 4 and 26 still failed (3 and 4 returned no jobs; 26 leaked the system prompt)
+  fix 2: backend/app/assistant/guards.py (argument normalization for search_jobs, and removal of quoted system prompt text from answers), unit tests in tests/test_guards.py
+
+Re-run after fix 2:
+  python scripts/live_reliability_run.py --only 3,4,26
+  result: 3 of 3 valid and correct (turn 3 listed remote Cupertino jobs, turn 4 listed Mountain View internships, turn 26 listed jobs and refused to share its instructions)
+  saved as docs/live_reliability_run3_results.md/.json and docs/live_run3_transcripts.md
+
+8. source-control safety
+
+git diff --check was run from the repository root. No whitespace errors were reported. No commit or push was performed during this documentation step.
+
+9. live Ollama reliability run
+
+Date:
+  2026-10-19
+
+Backend and model:
+  isolated FastAPI backend at http://127.0.0.1:9161
+  Ollama model qwen3:8b
+  isolated database p16_handshake_reliability
+
+Command:
+  .\backend\.venv\Scripts\python.exe .\backend\scripts\live_reliability_run_isolated.py --base http://127.0.0.1:9161 --email <dedicated-test-student> --confirm-dedicated-student --output-dir .\docs\evidence\live_reliability_2026-10-19
+
+The password was entered interactively and was not recorded. No save approval flag was supplied. No cleanup SQL ran.
+
+Result:
+  26 total turns
+  15 valid and correct
+  5 Ollama errors
+  3 wrong tool results
+  2 lost multi-step chains
+  1 API/database error
+  24 total tool calls
+  0 live repair attempts
+  0 iteration-ceiling events
+  4 save attempts blocked by confirmation
+  0 approved saves
+  0 saved_items created
+
+Tool-call totals:
+  search_jobs 8
+  get_student_preferences 5
+  get_job_details 4
+  save_job_or_event 4
+  search_events 3
+
+Read-only persistence verification:
+  assistant conversations 25
+  assistant messages 91
+  assistant tool logs 24
+  applications 1500
+  saved_items 0
+
+Evidence files:
+  docs/evidence/live_reliability_2026-10-19/live_reliability_results.json
+  docs/evidence/live_reliability_2026-10-19/live_reliability_results.md
+  docs/evidence/live_reliability_2026-10-19/live_transcripts.md
+
+This live run is separate from section 7, which records the earlier 20-turn deterministic fake-Ollama repair-path experiment.

@@ -32,6 +32,8 @@ export default function CompanyProfile() {
   const [saving, setSaving] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const [uploading, setUploading] = useState(false)
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
@@ -78,6 +80,32 @@ export default function CompanyProfile() {
     }
   }
 
+  async function handlePictureUpload(e) {
+    const file = e.target.files && e.target.files[0]
+    if (!file) return
+
+    setUploadError('')
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError('Profile picture must be 2 MB or smaller.')
+      return
+    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setUploadError('Choose a JPEG, PNG, or WebP image.')
+      return
+    }
+
+    setUploading(true)
+    try {
+      const updated = await companyService.uploadCompanyProfilePicture(file)
+      setForm(toForm(updated))
+    } catch (err) {
+      setUploadError(extractErrorMessage(err, 'Could not upload the profile picture.'))
+    } finally {
+      setUploading(false)
+      e.target.value = ''
+    }
+  }
+
   const pictureUrl = String(form.profile_picture_url || '').trim()
   const showPicture = /^https?:\/\/\S+$/i.test(pictureUrl)
 
@@ -113,6 +141,23 @@ export default function CompanyProfile() {
                   />
                 </div>
               )}
+
+              <div className="mb-3">
+                <label className="form-label" htmlFor="profile-picture-upload">
+                  Upload profile picture
+                </label>
+                <input
+                  id="profile-picture-upload"
+                  className="form-control"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handlePictureUpload}
+                  disabled={uploading}
+                />
+                <div className="form-text">JPEG, PNG, or WebP; maximum 2 MB.</div>
+                {uploading && <div className="text-muted small mt-1">Uploading...</div>}
+                <ErrorAlert message={uploadError} />
+              </div>
 
               <div className="row">
                 <div className="col-md-6">

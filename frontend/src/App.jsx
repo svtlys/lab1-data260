@@ -13,6 +13,7 @@ import CreateJob from './pages/CreateJob.jsx'
 import MyJobs from './pages/MyJobs.jsx'
 import JobApplicants from './pages/JobApplicants.jsx'
 import StudentProfileView from './pages/StudentProfileView.jsx'
+import StudentSearch from './pages/StudentSearch.jsx'
 import CompanyEvents from './pages/CompanyEvents.jsx'
 import CreateEvent from './pages/CreateEvent.jsx'
 import EventRegistrations from './pages/EventRegistrations.jsx'
@@ -57,6 +58,7 @@ export default function App() {
         <Route path="/company/events" element={companyOnly(<CompanyEvents />)} />
         <Route path="/company/events/new" element={companyOnly(<CreateEvent />)} />
         <Route path="/company/events/:eventId/registrations" element={companyOnly(<EventRegistrations />)} />
+        <Route path="/company/students" element={companyOnly(<StudentSearch />)} />
         <Route path="/company/students/:studentId" element={companyOnly(<StudentProfileView />)} />
 
         <Route path="*" element={<NotFound />} />

@@ -131,6 +131,7 @@ def chat_with_assistant(
         student_id=current_user.id,
         user_message=request.message,
         history=history,
+        confirmed_save=request.confirm_save,
     )
 
     # save only the new messages from this assistant turn
@@ -170,6 +171,9 @@ def chat_with_assistant(
         conversation_id=conversation.id,
         answer=result.answer,
         iterations=result.iterations,
+        tool_call_count=result.tool_call_count,
+        repair_attempts=result.repair_attempts,
+        failure_mode=result.failure_mode,
         reached_iteration_ceiling=result.reached_iteration_ceiling,
         tool_calls=[
             AssistantToolCallResponse(

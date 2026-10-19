@@ -3,6 +3,7 @@ test the five hand-built assistant tools with an isolated database.
 """
 
 from datetime import datetime
+import json
 from unittest import TestCase
 
 from sqlalchemy import create_engine
@@ -92,7 +93,7 @@ class AssistantToolTests(TestCase):
     def test_get_student_preferences(self):
         """return the student's profile preferences."""
 
-        preferences = get_student_preferences(self.db, self.user.id)
+        preferences = json.loads(get_student_preferences(self.db, self.user.id))
 
         self.assertEqual(preferences["major"], "Computer Science")
         self.assertEqual(preferences["skills"], "Python, SQL")
@@ -100,8 +101,8 @@ class AssistantToolTests(TestCase):
     def test_search_jobs_and_get_job_details(self):
         """find a job and retrieve its full details."""
 
-        jobs = search_jobs(self.db, required_skill="Python")
-        details = get_job_details(self.db, self.job.id)
+        jobs = json.loads(search_jobs(self.db, required_skill="Python"))
+        details = json.loads(get_job_details(self.db, self.job.id))
 
         self.assertEqual(len(jobs), 1)
         self.assertEqual(jobs[0]["id"], self.job.id)
@@ -110,11 +111,11 @@ class AssistantToolTests(TestCase):
     def test_search_events(self):
         """find events using city and virtual filters."""
 
-        events = search_events(
+        events = json.loads(search_events(
             self.db,
             city="Cupertino",
             is_virtual=True,
-        )
+        ))
 
         self.assertEqual(len(events), 1)
         self.assertEqual(events[0]["title"], "Test Data Workshop")
@@ -122,28 +123,33 @@ class AssistantToolTests(TestCase):
     def test_save_job_or_event_is_idempotent(self):
         """save both item types and report an existing save safely."""
 
-        first_job_save = save_job_or_event(
+        first_job_save = json.loads(save_job_or_event(
             self.db,
             self.user.id,
             "job",
             self.job.id,
-        )
-        repeated_job_save = save_job_or_event(
+        ))
+        repeated_job_save = json.loads(save_job_or_event(
             self.db,
             self.user.id,
             "job",
             self.job.id,
-        )
-        event_save = save_job_or_event(
+        ))
+        event_save = json.loads(save_job_or_event(
             self.db,
             self.user.id,
             "event",
             self.event.id,
-        )
+        ))
 
         self.assertFalse(first_job_save["already_saved"])
         self.assertTrue(repeated_job_save["already_saved"])
         self.assertFalse(event_save["already_saved"])
+
+    def test_tool_failures_are_returned_as_strings(self):
+        result = get_job_details(self.db, 99999)
+        self.assertIsInstance(result, str)
+        self.assertTrue(result.startswith("error:"))
 
 
 if __name__ == "__main__":

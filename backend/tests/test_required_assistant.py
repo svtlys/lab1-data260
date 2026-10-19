@@ -3,6 +3,7 @@ the five required Week 3 assistant tool tests.
 """
 
 from datetime import datetime
+import json
 from unittest import TestCase
 
 from sqlalchemy import create_engine
@@ -92,14 +93,14 @@ class RequiredAssistantTests(TestCase):
     def test_get_student_preferences(self):
         """verify the assistant can read student preferences."""
 
-        result = get_student_preferences(self.db, self.user.id)
+        result = json.loads(get_student_preferences(self.db, self.user.id))
 
         self.assertEqual(result["major"], "Computer Science")
 
     def test_search_jobs(self):
         """verify the assistant can search jobs by skill."""
 
-        result = search_jobs(self.db, required_skill="Python")
+        result = json.loads(search_jobs(self.db, required_skill="Python"))
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["id"], self.job.id)
@@ -107,14 +108,14 @@ class RequiredAssistantTests(TestCase):
     def test_get_job_details(self):
         """verify the assistant can retrieve one job."""
 
-        result = get_job_details(self.db, self.job.id)
+        result = json.loads(get_job_details(self.db, self.job.id))
 
         self.assertEqual(result["title"], "Required Python Job")
 
     def test_search_events(self):
         """verify the assistant can search virtual events."""
 
-        result = search_events(self.db, is_virtual=True)
+        result = json.loads(search_events(self.db, is_virtual=True))
 
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0]["title"], "Required Data Event")
@@ -122,12 +123,12 @@ class RequiredAssistantTests(TestCase):
     def test_save_job_or_event(self):
         """verify the assistant can save one job or event."""
 
-        result = save_job_or_event(
+        result = json.loads(save_job_or_event(
             self.db,
             self.user.id,
             "event",
             self.event.id,
-        )
+        ))
 
         self.assertTrue(result["saved"])
         self.assertFalse(result["already_saved"])

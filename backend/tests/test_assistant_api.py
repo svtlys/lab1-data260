@@ -26,7 +26,7 @@ class FakeAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history):
+    def run(self, db, student_id, user_message, history, confirmed_save=False):
         # return one assistant turn with one logged tool call
         return AssistantRunResult(
             answer="I found a useful opportunity.",
@@ -120,6 +120,7 @@ class AssistantApiTests(TestCase):
 
         self.assertEqual(response.answer, "I found a useful opportunity.")
         self.assertIsNotNone(response.created_at)
+        self.assertEqual(response.tool_call_count, 1)
         self.assertEqual(len(messages), 2)
         self.assertEqual(len(tool_logs), 1)
         self.assertEqual(tool_logs[0].tool_name, "search_jobs")

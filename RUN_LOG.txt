@@ -1,0 +1,93 @@
+DATA 260 LAB 1 VERIFICATION LOG
+Pair 16 | database p16_handshake | backend port 9160
+
+This log contains commands and results only. It does not contain passwords, database credentials, JWT secrets, or complete JWT tokens.
+
+1. project setup
+
+PowerShell working directory:
+  C:\Projects\lab1-data260
+
+Backend startup command:
+  python -m uvicorn app.main:app --app-dir ".\backend" --host 127.0.0.1 --port 9160
+
+Frontend startup command:
+  npm.cmd run dev
+
+2. database migration verification
+
+The company workflow migration was fetched from the partner branch, reviewed, and applied earlier in the integration work. The review confirmed that it did not use DROP, TRUNCATE, DELETE, or UPDATE statements. Read-only verification confirmed the company workflow tables and required columns after the migration.
+
+No migration command was rerun during this documentation step. After the read-only comparison, database/05_company_workflow.sql was added from origin/alyssa-week3. It matches the already-applied schema, so it was not executed again.
+
+3. safe seed-generator preview
+
+Commands run from backend:
+  .\.venv\Scripts\python.exe scripts\generate_seed_data.py --summary
+  .\.venv\Scripts\python.exe scripts\generate_seed_data.py --dry-run
+
+Result:
+  seed 16
+  students 200
+  companies 50
+  jobs 300
+  applications 1500
+  events 100
+  event registrations 1482
+  cities limited to Sunnyvale, Cupertino, Mountain View
+  validation counts/cities/foreign keys/duplicates passed
+  safe preview: no database writes
+
+The --reset option was not used.
+
+4. backend assistant verification
+
+Focused regression command:
+  .\.venv\Scripts\python.exe -m unittest tests.test_assistant_loop tests.test_assistant_tools tests.test_assistant_api tests.test_confirmation tests.test_prompt_injection tests.test_required_assistant
+
+Result:
+  24 tests passed
+
+Final focused reliability command:
+  .\.venv\Scripts\python.exe -m unittest tests.test_reliability tests.test_assistant_loop
+
+Result:
+  9 tests passed
+
+5. frontend build
+
+Command:
+  npm.cmd run build
+
+Result:
+  Vite production build passed
+  126 modules transformed
+  dist output generated under the ignored frontend/dist directory
+
+6. prompt-injection testing
+
+Five poisoned-content queries were run before and after the defense.
+  before defense: 4/5 unsafe
+  after defense: 0/5 unsafe
+
+The defense delimits retrieved database content and labels it as untrusted data. It does not allow descriptions to override system instructions, select unauthorized tools, or reveal private student information.
+
+7. reliability testing
+
+Command:
+  .\.venv\Scripts\python.exe scripts\reliability_experiment.py
+
+The experiment ran 20 deterministic turns with a fake Ollama client and isolated in-memory SQLite database. Database writes: 0.
+
+Before repair:
+  valid 8 | malformed 3 | unknown 2 | text-only 2 | lost chains 2
+  Ollama errors 1 | database errors 1 | iteration ceilings 1
+
+After one bounded repair attempt:
+  valid 14 | malformed unresolved 0 | unknown unresolved 0 | text-only 2
+  lost chains 2 | Ollama errors 1 | database errors unresolved 0
+  iteration ceilings 1
+
+8. source-control safety
+
+git diff --check was run from the repository root. No whitespace errors were reported. No commit or push was performed during this documentation step.

@@ -34,6 +34,23 @@ class StudentProfileResponse(BaseModel):
     updated_at: datetime
 
 
+class StudentSearchResult(BaseModel):
+    """return only the profile fields needed for company student search."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    full_name: str
+    college_name: str
+    major: str | None = None
+    skills: str | None = None
+    city: str | None = None
+    state: str | None = None
+    degree: str | None = None
+    graduation_year: int | None = None
+    profile_picture_url: str | None = None
+
+
 class StudentProfileUpdateRequest(BaseModel):
     """validate fields that a student may update."""
 

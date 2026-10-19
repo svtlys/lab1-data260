@@ -13,6 +13,10 @@ class AssistantChatRequest(BaseModel):
 
     message: str = Field(min_length=1, max_length=4000)
     conversation_id: int | None = Field(default=None, ge=1)
+    confirm_save: bool = Field(
+        default=False,
+        description="explicitly approve a save_job_or_event call for this turn",
+    )
 
 
 class AssistantToolCallResponse(BaseModel):
@@ -32,6 +36,9 @@ class AssistantChatResponse(BaseModel):
     conversation_id: int
     answer: str
     iterations: int
+    tool_call_count: int
+    repair_attempts: int
+    failure_mode: str | None = None
     reached_iteration_ceiling: bool
     tool_calls: list[AssistantToolCallResponse]
     created_at: datetime

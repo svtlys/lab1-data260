@@ -2,16 +2,17 @@
 protected student profile routes.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_current_user, require_student
+from app.api.dependencies import get_current_user, require_company, require_student
 from app.core.database import get_db
 from app.models.student_profile import StudentProfile
 from app.models.user import User, UserRole
 from app.schemas.student_profile import (
     StudentProfileResponse,
+    StudentSearchResult,
     StudentProfileUpdateRequest,
 )
 
@@ -81,6 +82,37 @@ def update_my_student_profile(
     db.refresh(profile)
 
     return profile
+
+
+@router.get(
+    "/search",
+    response_model=list[StudentSearchResult],
+)
+def search_students(
+    name: str | None = Query(default=None, max_length=100),
+    college: str | None = Query(default=None, max_length=200),
+    major: str | None = Query(default=None, max_length=150),
+    skills: str | None = Query(default=None, max_length=200),
+    current_user: User = Depends(require_company),
+    db: Session = Depends(get_db),
+):
+    """search student profiles using company-approved filters."""
+
+    statement = select(StudentProfile)
+    filters = {
+        "name": (StudentProfile.full_name, name),
+        "college": (StudentProfile.college_name, college),
+        "major": (StudentProfile.major, major),
+        "skills": (StudentProfile.skills, skills),
+    }
+
+    # apply every supplied filter so companies can narrow their search
+    for field_name, (column, value) in filters.items():
+        if isinstance(value, str) and value.strip():
+            statement = statement.where(column.ilike(f"%{value.strip()}%"))
+
+    statement = statement.order_by(StudentProfile.full_name)
+    return list(db.scalars(statement).all())
 
 
 @router.get(

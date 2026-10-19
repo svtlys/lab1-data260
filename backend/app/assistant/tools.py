@@ -7,8 +7,10 @@ loop will decide when to call them without using an agent framework.
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from decimal import Decimal
+from functools import wraps
 from typing import Any
 
 from sqlalchemy import or_, select
@@ -22,6 +24,22 @@ from app.models.student_profile import StudentProfile
 
 class AssistantToolError(ValueError):
     """represent invalid input supplied to an assistant tool."""
+
+
+def _string_tool(function):
+    """return JSON text for success and a safe error string for failure."""
+
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        try:
+            return json.dumps(function(*args, **kwargs), default=str)
+        except Exception as error:
+            # roll back a failed database operation before returning the error
+            if args and isinstance(args[0], Session):
+                args[0].rollback()
+            return f"error: {error}"
+
+    return wrapped
 
 
 def _json_value(value: Any) -> Any:
@@ -107,10 +125,11 @@ def _parse_datetime(value: datetime | str | None) -> datetime | None:
         ) from error
 
 
+@_string_tool
 def get_student_preferences(
     db: Session,
     student_id: int,
-) -> dict[str, Any]:
+) -> str:
     """return the profile preferences for one student."""
 
     profile = db.scalar(
@@ -123,6 +142,7 @@ def get_student_preferences(
     return _student_preferences_dict(profile)
 
 
+@_string_tool
 def search_jobs(
     db: Session,
     query: str | None = None,
@@ -131,7 +151,7 @@ def search_jobs(
     is_remote: bool | None = None,
     required_skill: str | None = None,
     limit: int = 10,
-) -> list[dict[str, Any]]:
+) -> str:
     """search seeded jobs using optional student-friendly filters."""
 
     if limit < 1 or limit > 50:
@@ -167,10 +187,11 @@ def search_jobs(
     return [_job_dict(job) for job in db.scalars(statement).all()]
 
 
+@_string_tool
 def get_job_details(
     db: Session,
     job_id: int,
-) -> dict[str, Any]:
+) -> str:
     """return details for one job."""
 
     job = db.get(Job, job_id)
@@ -181,6 +202,7 @@ def get_job_details(
     return _job_dict(job)
 
 
+@_string_tool
 def search_events(
     db: Session,
     query: str | None = None,
@@ -190,7 +212,7 @@ def search_events(
     start_date: datetime | str | None = None,
     end_date: datetime | str | None = None,
     limit: int = 10,
-) -> list[dict[str, Any]]:
+) -> str:
     """search events using optional student-friendly filters."""
 
     if limit < 1 or limit > 50:
@@ -229,12 +251,13 @@ def search_events(
     return [_event_dict(event) for event in db.scalars(statement).all()]
 
 
+@_string_tool
 def save_job_or_event(
     db: Session,
     student_id: int,
     item_type: str,
     item_id: int,
-) -> dict[str, Any]:
+) -> str:
     """save one job or event for a student without creating duplicates."""
 
     normalized_item_type = item_type.strip().lower()

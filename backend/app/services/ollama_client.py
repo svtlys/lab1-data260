@@ -104,6 +104,15 @@ class OllamaClient:
 
         return self._request("POST", "/api/chat", payload)
 
+    def complete(
+        self,
+        messages: Sequence[dict[str, Any]],
+        tools: Sequence[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """complete one chat turn using the manual assistant interface."""
+
+        return self.chat(messages, tools=tools)
+
     def generate(
         self,
         prompt: str,

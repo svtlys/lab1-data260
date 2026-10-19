@@ -18,6 +18,14 @@ export function updateMyCompanyProfile(payload) {
   return api.put('/api/companies/me', payload).then((res) => res.data)
 }
 
+export function uploadCompanyProfilePicture(file) {
+  const formData = new FormData()
+  formData.append('image', file)
+  return api
+    .post('/api/companies/me/profile-picture', formData)
+    .then((res) => res.data)
+}
+
 // ---- Job postings (owned by the logged-in company) ----
 
 export function createJob(payload) {
@@ -54,6 +62,13 @@ export function getApplicationResume(applicationId) {
 
 export function getApplicantProfile(studentId) {
   return api.get(`/api/students/${seg(studentId)}`).then((res) => res.data)
+}
+
+export function searchStudents(filters = {}) {
+  const params = Object.fromEntries(
+    Object.entries(filters).filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== ''),
+  )
+  return api.get('/api/companies/students/search', { params }).then((res) => toList(res.data))
 }
 
 // ---- Events (Week 3) ----

@@ -20,6 +20,7 @@ const COMPANY_LINKS = [
   { to: '/company/jobs', label: 'My jobs' },
   { to: '/company/jobs/new', label: 'Post a job' },
   { to: '/company/events', label: 'Events' },
+  { to: '/company/students', label: 'Find students' },
   { to: '/company/profile', label: 'Profile' },
 ]
 

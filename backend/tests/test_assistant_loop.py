@@ -3,7 +3,9 @@ test the bounded manual assistant loop without calling Ollama.
 """
 
 from datetime import datetime
+import json
 from unittest import TestCase
+from unittest.mock import patch
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -12,8 +14,10 @@ from sqlalchemy.pool import StaticPool
 from app.assistant.loop import AssistantLoop
 from app.core.database import Base
 from app.models.job import Job
+from app.models.saved_item import SavedItem
 from app.models.student_profile import StudentProfile
 from app.models.user import User, UserRole
+from app.services.ollama_client import OllamaClient, OllamaError
 
 
 class FakeOllamaClient:
@@ -72,6 +76,7 @@ class AssistantLoopTests(TestCase):
 
     def tearDown(self):
         # remove isolated test data before closing the session
+        self.db.query(SavedItem).delete()
         self.db.query(Job).delete()
         self.db.query(StudentProfile).delete()
         self.db.query(User).delete()
@@ -108,13 +113,17 @@ class AssistantLoopTests(TestCase):
         )
         loop = AssistantLoop(client=fake_client, max_iterations=3)
 
-        result = loop.run(self.db, self.user.id, "find me a Sunnyvale job")
+        with self.assertLogs("app.assistant.loop", level="INFO") as logs:
+            result = loop.run(self.db, self.user.id, "find me a Sunnyvale job")
 
         self.assertEqual(result.answer, "I found one Sunnyvale internship.")
         self.assertEqual(result.iterations, 2)
+        self.assertEqual(result.tool_call_count, 1)
         self.assertFalse(result.reached_iteration_ceiling)
         self.assertEqual(result.tool_calls[0]["tool_name"], "search_jobs")
         self.assertEqual(len(fake_client.calls), 2)
+        self.assertTrue(any("assistant_tool_call" in line for line in logs.output))
+        self.assertTrue(any('"city": "Sunnyvale"' in line for line in logs.output))
 
     def test_loop_stops_at_iteration_ceiling(self):
         """stop when the model keeps requesting tools indefinitely."""
@@ -141,7 +150,193 @@ class AssistantLoopTests(TestCase):
 
         self.assertTrue(result.reached_iteration_ceiling)
         self.assertEqual(result.iterations, 1)
+        self.assertEqual(result.tool_call_count, 1)
         self.assertIn("tool-call limit", result.answer)
+
+    def test_ollama_complete_keeps_chat_compatibility(self):
+        client = OllamaClient(base_url="http://127.0.0.1:11434", model="test-model")
+        expected = {"message": {"content": "ok"}}
+
+        with patch.object(client, "chat", return_value=expected) as chat:
+            result = client.complete([], tools=[])
+
+        self.assertEqual(result, expected)
+        chat.assert_called_once_with([], tools=[])
+
+    def test_repair_reprompts_once_and_recovers(self):
+        fake_client = FakeOllamaClient(
+            [
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "malformed-call",
+                                "function": {
+                                    "name": "search_jobs",
+                                    "arguments": "not valid json",
+                                },
+                            }
+                        ],
+                    }
+                },
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "repaired-call",
+                                "function": {
+                                    "name": "search_jobs",
+                                    "arguments": {"city": "Sunnyvale"},
+                                },
+                            }
+                        ],
+                    }
+                },
+                {"message": {"content": "I recovered and found the job."}},
+            ]
+        )
+
+        result = AssistantLoop(client=fake_client).run(
+            self.db,
+            self.user.id,
+            "find a Sunnyvale job",
+        )
+
+        self.assertEqual(result.repair_attempts, 1)
+        self.assertTrue(result.repair_succeeded)
+        self.assertEqual(result.tool_call_count, 2)
+        self.assertEqual(len(fake_client.calls), 3)
+        self.assertTrue(
+            any(
+                message.get("role") == "system"
+                and "repair request" in message.get("content", "")
+                for message in result.messages
+            )
+        )
+
+    def test_repair_stops_after_one_attempt(self):
+        repeated_error = {
+            "message": {
+                "content": "",
+                "tool_calls": [
+                    {
+                        "id": "repeated-malformed-call",
+                        "function": {
+                            "name": "search_jobs",
+                            "arguments": "not valid json",
+                        },
+                    }
+                ],
+            }
+        }
+        fake_client = FakeOllamaClient([repeated_error] * 5)
+
+        result = AssistantLoop(client=fake_client).run(
+            self.db,
+            self.user.id,
+            "keep trying",
+        )
+
+        repair_messages = [
+            message
+            for message in result.messages
+            if message.get("role") == "system"
+            and "repair request" in message.get("content", "")
+        ]
+        self.assertEqual(result.repair_attempts, 1)
+        self.assertFalse(result.repair_succeeded)
+        self.assertEqual(len(repair_messages), 1)
+        self.assertTrue(result.reached_iteration_ceiling)
+        self.assertEqual(result.failure_mode, "iteration_ceiling")
+        self.assertEqual(result.tool_call_count, 5)
+
+    def test_ollama_error_is_classified_and_stops(self):
+        class FailingOllamaClient:
+            def complete(self, messages, tools=None):
+                raise OllamaError("simulated timeout")
+
+        result = AssistantLoop(client=FailingOllamaClient()).run(
+            self.db,
+            self.user.id,
+            "find a job",
+        )
+
+        self.assertEqual(result.failure_mode, "ollama_error")
+        self.assertEqual(result.repair_attempts, 0)
+        self.assertEqual(result.tool_call_count, 0)
+        self.assertIn("simulated timeout", result.answer)
+
+    def test_save_is_cancelled_without_confirmation(self):
+        fake_client = FakeOllamaClient(
+            [
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "save-call",
+                                "function": {
+                                    "name": "save_job_or_event",
+                                    "arguments": {
+                                        "item_type": "job",
+                                        "item_id": self.job.id,
+                                    },
+                                },
+                            }
+                        ],
+                    }
+                },
+                {"message": {"content": "I did not save it because confirmation was declined."}},
+            ]
+        )
+
+        result = AssistantLoop(client=fake_client).run(
+            self.db,
+            self.user.id,
+            "save this job",
+        )
+
+        self.assertIn("did not save", result.answer)
+        self.assertEqual(result.tool_call_count, 1)
+        self.assertTrue(result.tool_calls[0]["error"].startswith("cancelled:"))
+        self.assertEqual(self.db.query(SavedItem).count(), 0)
+
+    def test_save_runs_after_explicit_confirmation(self):
+        fake_client = FakeOllamaClient(
+            [
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "save-call-approved",
+                                "function": {
+                                    "name": "save_job_or_event",
+                                    "arguments": {
+                                        "item_type": "job",
+                                        "item_id": self.job.id,
+                                    },
+                                },
+                            }
+                        ],
+                    }
+                },
+                {"message": {"content": "The job was saved."}},
+            ]
+        )
+
+        result = AssistantLoop(client=fake_client).run(
+            self.db,
+            self.user.id,
+            "save this job",
+            confirmed_save=True,
+        )
+
+        saved_result = json.loads(result.tool_calls[0]["result"])
+        self.assertTrue(saved_result["saved"])
+        self.assertEqual(self.db.query(SavedItem).count(), 1)
 
 
 if __name__ == "__main__":

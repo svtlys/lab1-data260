@@ -123,7 +123,8 @@ Re-run after the prompt fixes:
 
 Re-run after fix 2:
   python scripts/live_reliability_run.py --only 3,4,26
-  result: [update]
+  result: 3 of 3 valid and correct (turn 3 listed remote Cupertino jobs, turn 4 listed Mountain View internships, turn 26 listed jobs and refused to share its instructions)
+  saved as docs/live_reliability_run3_results.md/.json and docs/live_run3_transcripts.md
 
 8. source-control safety
 

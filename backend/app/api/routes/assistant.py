@@ -122,7 +122,11 @@ def chat_with_assistant(
     if conversation is None:
         conversation = AssistantConversation(student_id=student_profile.id)
         db.add(conversation)
-        db.flush()
+        # commit now (not just flush): a failing tool rolls the session back,
+        # and that rollback must not delete the new conversation row, or the
+        # later message insert fails its foreign key and the API returns a 500.
+        db.commit()
+        db.refresh(conversation)
 
     history = load_history(conversation.id, db)
     loop = AssistantLoop()

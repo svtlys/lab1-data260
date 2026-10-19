@@ -23,3 +23,8 @@ The corrected run completed all 20 turns, reported zero database writes, and pro
 ## Limits on AI assistance
 
 AI assistance did not receive or display `backend/.env`, passwords, JWT secrets, complete tokens, uploaded resumes, or private profile images. AI suggestions were checked against the actual source files and test output before being included in the project documentation.
+## Vrishin’s Contribution
+
+I used Codex as a development and debugging assistant for the FastAPI backend, MySQL and SQLAlchemy connection, bcrypt authentication, JWT handling, student profile APIs, job and event workflows, assistant tools, and testing documentation. I provided terminal output and manually checked the suggested code in the running application before treating a feature as complete.
+
+One incorrect result occurred when the assistant produced an empty final response after successfully calling the event-search tool. I detected the problem from the Assistant page and the API response, which showed one tool call but an empty answer. I traced the issue to Ollama returning an empty final message after the tool result. The fix added a clear fallback response stating that no matching events were found, followed by focused regression tests and a frontend build check. I also documented the limitation that the event-search tool does not directly filter by computer-science major.

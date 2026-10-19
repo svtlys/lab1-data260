@@ -48,6 +48,29 @@ class FakeAssistantLoop:
         )
 
 
+class RollbackAssistantLoop:
+    """simulate a tool failure that rolls back the database session."""
+
+    def __init__(self):
+        self.max_iterations = 5
+
+    def run(self, db, student_id, user_message, history, confirmed_save=False):
+        # simulate the rollback used when a tool fails
+        db.rollback()
+        return AssistantRunResult(
+            answer="The tool failed, but the conversation was preserved.",
+            messages=[
+                {"role": "system", "content": "system"},
+                {"role": "user", "content": user_message},
+                {
+                    "role": "assistant",
+                    "content": "The tool failed, but the conversation was preserved.",
+                },
+            ],
+            failure_mode="database_error",
+        )
+
+
 class AssistantApiTests(TestCase):
     """verify conversation and tool-log persistence."""
 
@@ -124,6 +147,26 @@ class AssistantApiTests(TestCase):
         self.assertEqual(len(messages), 2)
         self.assertEqual(len(tool_logs), 1)
         self.assertEqual(tool_logs[0].tool_name, "search_jobs")
+
+    def test_new_conversation_survives_assistant_rollback(self):
+        """keep a new conversation when a later assistant tool rolls back."""
+
+        request = AssistantChatRequest(message="find me a job")
+        with patch.object(assistant_route, "AssistantLoop", RollbackAssistantLoop):
+            response = assistant_route.chat_with_assistant(
+                request=request,
+                current_user=self.user,
+                db=self.db,
+            )
+
+        conversation = self.db.get(
+            AssistantConversation,
+            response.conversation_id,
+        )
+
+        self.assertIsNotNone(conversation)
+        self.assertEqual(conversation.student_id, self.student.id)
+        self.assertEqual(response.failure_mode, "database_error")
 
 
 if __name__ == "__main__":

@@ -25,6 +25,7 @@ from app.services.ollama_client import OllamaClient, OllamaError
 
 DEFAULT_MAX_ITERATIONS = 5
 DEFAULT_MAX_REPAIR_ATTEMPTS = 1
+EMPTY_EVENT_SEARCH_FALLBACK = "No matching events were found for that time period."
 logger = logging.getLogger(__name__)
 UNTRUSTED_DATA_TOOLS = frozenset(
     {"search_jobs", "get_job_details", "search_events"}
@@ -285,6 +286,14 @@ class AssistantLoop:
             messages.append(assistant_message)
 
             if not tool_calls:
+                if not assistant_message["content"].strip():
+                    event_search_was_empty = any(
+                        call.get("tool_name") == "search_events"
+                        and call.get("result") == "[]"
+                        for call in reversed(tool_call_log)
+                    )
+                    if event_search_was_empty:
+                        assistant_message["content"] = EMPTY_EVENT_SEARCH_FALLBACK
                 logger.info(
                     "assistant_run tool_call_count=%s iterations=%s reached_iteration_ceiling=false",
                     len(tool_call_log),

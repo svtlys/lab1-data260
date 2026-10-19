@@ -122,7 +122,8 @@ def chat_with_assistant(
     if conversation is None:
         conversation = AssistantConversation(student_id=student_profile.id)
         db.add(conversation)
-        db.flush()
+        db.commit()
+        db.refresh(conversation)
 
     history = load_history(conversation.id, db)
     loop = AssistantLoop()

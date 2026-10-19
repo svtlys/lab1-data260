@@ -68,7 +68,7 @@ export function searchStudents(filters = {}) {
   const params = Object.fromEntries(
     Object.entries(filters).filter(([, value]) => value !== null && value !== undefined && String(value).trim() !== ''),
   )
-  return api.get('/api/companies/students/search', { params }).then((res) => toList(res.data))
+  return api.get('/api/students/search', { params }).then((res) => toList(res.data))
 }
 
 // ---- Events (Week 3) ----

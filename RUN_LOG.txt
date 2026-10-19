@@ -141,7 +141,7 @@ Backend and model:
   isolated database p16_handshake_reliability
 
 Command:
-  .\backend\.venv\Scripts\python.exe .\backend\scripts\live_reliability_run.py --base http://127.0.0.1:9161 --email <dedicated-test-student> --confirm-dedicated-student --output-dir .\docs\evidence\live_reliability_2026-10-19
+  .\backend\.venv\Scripts\python.exe .\backend\scripts\live_reliability_run_isolated.py --base http://127.0.0.1:9161 --email <dedicated-test-student> --confirm-dedicated-student --output-dir .\docs\evidence\live_reliability_2026-10-19
 
 The password was entered interactively and was not recorded. No save approval flag was supplied. No cleanup SQL ran.
 

@@ -4,7 +4,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 
-from scripts.live_reliability_run import (
+from scripts.live_reliability_run_isolated import (
     EMAIL_ENV,
     TURNS,
     get_credentials,

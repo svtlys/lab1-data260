@@ -6,10 +6,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import require_student
+from app.api.dependencies import get_current_user, require_student
 from app.core.database import get_db
 from app.models.student_profile import StudentProfile
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.student_profile import (
     StudentProfileResponse,
     StudentProfileUpdateRequest,
@@ -80,4 +80,29 @@ def update_my_student_profile(
     db.commit()
     db.refresh(profile)
 
+    return profile
+
+
+@router.get(
+    "/{student_id}",
+    response_model=StudentProfileResponse,
+)
+def get_student_profile(
+    student_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """allow companies to view students and students to view only themselves."""
+
+    profile = db.get(StudentProfile, student_id)
+    if profile is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="student profile was not found",
+        )
+    if current_user.role == UserRole.STUDENT and profile.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="students may only view their own profile",
+        )
     return profile

@@ -28,6 +28,20 @@ Thumbs.db
 # local logs
 *.log
 
+# uploaded application files
+backend/uploads/resumes/
+
+# uploaded profile images
+backend/uploads/profile_images/
+frontend/uploads/profile_images/
+
+# local credentials and key material
+secrets/
+**/secrets/
+credentials*.json
+*.pem
+*.key
+
 # temporary files
 *.tmp
 *.temp

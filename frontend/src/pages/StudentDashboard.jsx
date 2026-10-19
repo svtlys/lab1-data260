@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import * as studentService from '../services/studentService'
 import { extractErrorMessage } from '../services/api'
+import { cleanPayload } from '../utils/validation'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 
@@ -56,11 +57,18 @@ export default function StudentDashboard() {
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setSaving(true)
     setError('')
     setSaveMessage('')
+    // The backend requires these two to be at least 2 characters when sent.
+    if (!String(form.full_name || '').trim() || !String(form.college_name || '').trim()) {
+      setError('Full name and college are required.')
+      return
+    }
+    setSaving(true)
     try {
-      const updated = await studentService.updateMyStudentProfile(form)
+      // cleanPayload turns blanks into null; sending '' for graduation_year or
+      // cgpa would be rejected by the backend (422).
+      const updated = await studentService.updateMyStudentProfile(cleanPayload(form))
       setProfile(updated)
       setSaveMessage('Profile saved.')
     } catch (err) {

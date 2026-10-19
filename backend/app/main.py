@@ -7,7 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.auth import router as auth_router
 from app.api.routes.assistant import router as assistant_router
+from app.api.routes.applications import company_router as company_applications_router
+from app.api.routes.applications import student_router as applications_router
+from app.api.routes.company import router as company_router
+from app.api.routes.company_events import router as company_events_router
 from app.api.routes.events import router as events_router
+from app.api.routes.jobs import company_router as company_jobs_router
+from app.api.routes.jobs import student_router as jobs_router
 from app.api.routes.student_profile import router as student_profile_router
 
 
@@ -42,6 +48,18 @@ app.include_router(student_profile_router)
 
 # make the protected student event endpoints available
 app.include_router(events_router)
+
+# make the protected company profile endpoints available
+app.include_router(company_router)
+app.include_router(company_events_router)
+
+# make the protected company and student job endpoints available
+app.include_router(company_jobs_router)
+app.include_router(jobs_router)
+
+# make the protected application endpoints available
+app.include_router(company_applications_router)
+app.include_router(applications_router)
 
 # make the protected assistant endpoint available
 app.include_router(assistant_router)

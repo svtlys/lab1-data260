@@ -5,7 +5,7 @@ student event search, details, and registration routes.
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -16,6 +16,7 @@ from app.models.event_registration import EventRegistration
 from app.models.student_profile import StudentProfile
 from app.models.user import User
 from app.schemas.event import EventRegistrationResponse, EventResponse
+from app.services.eligibility import check_eligibility, check_registration_open
 
 
 # group student event endpoints under /api/events
@@ -158,6 +159,26 @@ def register_for_event(
             status_code=status.HTTP_409_CONFLICT,
             detail="you are already registered for this event",
         )
+
+    if event.company_id is not None:
+        eligible, reasons = check_eligibility(event, student_profile)
+        if not eligible:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="; ".join(reasons),
+            )
+
+        registered_count = db.scalar(
+            select(func.count(EventRegistration.id)).where(
+                EventRegistration.event_id == event.id,
+            )
+        ) or 0
+        registration_open, reason = check_registration_open(event, int(registered_count))
+        if not registration_open:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=reason,
+            )
 
     registration = EventRegistration(
         event_id=event.id,

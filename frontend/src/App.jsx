@@ -21,6 +21,8 @@ import EventRegistrations from './pages/EventRegistrations.jsx'
 import StudentEvents from './pages/StudentEvents.jsx'
 import StudentRegisteredEvents from './pages/StudentRegisteredEvents.jsx'
 import AssistantChat from './pages/AssistantChat.jsx'
+import StudentJobs from './pages/StudentJobs.jsx'
+import MyApplications from './pages/MyApplications.jsx'
 import NotFound from './pages/NotFound.jsx'
 
 // Pages only a logged-in company may open. Students get sent to their own dashboard.
@@ -46,6 +48,8 @@ export default function App() {
           }
         />
 
+        <Route path="/jobs" element={studentOnly(<StudentJobs />)} />
+        <Route path="/applications" element={studentOnly(<MyApplications />)} />
         <Route path="/events" element={studentOnly(<StudentEvents />)} />
         <Route path="/events/registered" element={studentOnly(<StudentRegisteredEvents />)} />
         <Route path="/assistant" element={studentOnly(<AssistantChat />)} />

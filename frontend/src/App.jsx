@@ -48,6 +48,8 @@ export default function App() {
           }
         />
 
+        <Route path="/jobs" element={studentOnly(<StudentJobs />)} />
+        <Route path="/applications" element={studentOnly(<MyApplications />)} />
         <Route path="/events" element={studentOnly(<StudentEvents />)} />
         <Route path="/events/registered" element={studentOnly(<StudentRegisteredEvents />)} />
         <Route path="/jobs" element={studentOnly(<StudentJobs />)} />

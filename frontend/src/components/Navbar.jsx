@@ -10,6 +10,8 @@ const GUEST_LINKS = [
 
 const STUDENT_LINKS = [
   { to: '/dashboard/student', label: 'Dashboard' },
+  { to: '/jobs', label: 'Jobs' },
+  { to: '/applications', label: 'My applications' },
   { to: '/events', label: 'Events' },
   { to: '/events/registered', label: 'My events' },
   { to: '/assistant', label: 'Assistant' },

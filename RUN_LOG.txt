@@ -91,3 +91,53 @@ After one bounded repair attempt:
 8. source-control safety
 
 git diff --check was run from the repository root. No whitespace errors were reported. No commit or push was performed during this documentation step.
+
+9. live Ollama reliability run
+
+Date:
+  2026-10-19
+
+Backend and model:
+  isolated FastAPI backend at http://127.0.0.1:9161
+  Ollama model qwen3:8b
+  isolated database p16_handshake_reliability
+
+Command:
+  .\backend\.venv\Scripts\python.exe .\backend\scripts\live_reliability_run.py --base http://127.0.0.1:9161 --email <dedicated-test-student> --confirm-dedicated-student --output-dir .\docs\evidence\live_reliability_2026-10-19
+
+The password was entered interactively and was not recorded. No save approval flag was supplied. No cleanup SQL ran.
+
+Result:
+  26 total turns
+  15 valid and correct
+  5 Ollama errors
+  3 wrong tool results
+  2 lost multi-step chains
+  1 API/database error
+  24 total tool calls
+  0 live repair attempts
+  0 iteration-ceiling events
+  4 save attempts blocked by confirmation
+  0 approved saves
+  0 saved_items created
+
+Tool-call totals:
+  search_jobs 8
+  get_student_preferences 5
+  get_job_details 4
+  save_job_or_event 4
+  search_events 3
+
+Read-only persistence verification:
+  assistant conversations 25
+  assistant messages 91
+  assistant tool logs 24
+  applications 1500
+  saved_items 0
+
+Evidence files:
+  docs/evidence/live_reliability_2026-10-19/live_reliability_results.json
+  docs/evidence/live_reliability_2026-10-19/live_reliability_results.md
+  docs/evidence/live_reliability_2026-10-19/live_transcripts.md
+
+This live run is separate from section 7, which records the earlier 20-turn deterministic fake-Ollama repair-path experiment.

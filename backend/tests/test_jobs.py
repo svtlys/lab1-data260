@@ -16,7 +16,7 @@ from app.core.database import Base
 from app.models.company_profile import CompanyProfile
 from app.models.job import Job
 from app.models.user import User, UserRole
-from app.schemas.job import JobCreateRequest
+from app.schemas.job import EMPLOYMENT_TYPE_VALUES, JobCreateRequest
 
 
 class JobRouteTests(TestCase):
@@ -64,20 +64,59 @@ class JobRouteTests(TestCase):
         )
         self.db.add_all([self.company_profile, self.other_profile])
         self.db.flush()
-        self.db.add(
-            Job(
-                company_id=self.company_profile.id,
-                title="Data Intern",
-                description="Work with data pipelines and reports.",
-                company_name="First Company",
-                location="Sunnyvale, CA",
-                city="Sunnyvale",
-                employment_type="Internship",
-                is_remote=False,
-                required_skills="Python, SQL",
-                posted_at=datetime(2026, 10, 1),
-                deadline=date(2026, 12, 1),
-            )
+        # create one fixture for every canonical employment type
+        self.db.add_all(
+            [
+                Job(
+                    company_id=self.company_profile.id,
+                    title="Data Intern",
+                    description="Work with data pipelines and reports.",
+                    company_name="First Company",
+                    location="Sunnyvale, CA",
+                    city="Sunnyvale",
+                    employment_type="Internship",
+                    is_remote=False,
+                    required_skills="Python, SQL",
+                    posted_at=datetime(2026, 10, 1),
+                    deadline=date(2026, 12, 1),
+                ),
+                Job(
+                    company_id=self.company_profile.id,
+                    title="Data Engineer",
+                    description="Build production data pipelines.",
+                    company_name="First Company",
+                    location="Cupertino, CA",
+                    city="Cupertino",
+                    employment_type="Full-time",
+                    is_remote=False,
+                    required_skills="Python, SQL",
+                    posted_at=datetime(2026, 10, 2),
+                ),
+                Job(
+                    company_id=self.company_profile.id,
+                    title="Part-time Analyst",
+                    description="Support weekly business reports.",
+                    company_name="First Company",
+                    location="Mountain View, CA",
+                    city="Mountain View",
+                    employment_type="Part-time",
+                    is_remote=True,
+                    required_skills="Excel",
+                    posted_at=datetime(2026, 10, 3),
+                ),
+                Job(
+                    company_id=self.company_profile.id,
+                    title="Campus Data Assistant",
+                    description="Help maintain campus data systems.",
+                    company_name="First Company",
+                    location="Sunnyvale, CA",
+                    city="Sunnyvale",
+                    employment_type="On-campus",
+                    is_remote=False,
+                    required_skills="Data entry",
+                    posted_at=datetime(2026, 10, 4),
+                ),
+            ]
         )
         self.db.commit()
         self.db.refresh(self.company_user)
@@ -107,8 +146,36 @@ class JobRouteTests(TestCase):
         jobs = get_my_jobs(self.company_user, self.db)
 
         self.assertEqual(created["company_id"], self.company_profile.id)
-        self.assertEqual(len(jobs), 2)
+        self.assertEqual(len(jobs), 5)
         self.assertTrue(all(job["company_id"] == self.company_profile.id for job in jobs))
+
+    def test_student_can_filter_each_canonical_employment_type(self):
+        for employment_type in EMPLOYMENT_TYPE_VALUES:
+            jobs = search_jobs(
+                search=None,
+                city=None,
+                employment_type=employment_type,
+                is_remote=None,
+                current_user=self.student_user,
+                db=self.db,
+            )
+
+            self.assertTrue(jobs)
+            self.assertTrue(all(job["employment_type"] == employment_type for job in jobs))
+
+    def test_employment_type_filter_preserves_city_filter(self):
+        jobs = search_jobs(
+            search=None,
+            city="Mountain View",
+            employment_type="Part-time",
+            is_remote=None,
+            current_user=self.student_user,
+            db=self.db,
+        )
+
+        self.assertEqual(len(jobs), 1)
+        self.assertEqual(jobs[0]["city"], "Mountain View")
+        self.assertEqual(jobs[0]["employment_type"], "Part-time")
 
     def test_student_can_search_and_view_job_details(self):
         jobs = search_jobs(

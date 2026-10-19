@@ -60,6 +60,8 @@ export default function CreateEvent() {
       location: form.is_virtual ? 'Online' : form.location,
     })
     payload.capacity = Number(payload.capacity)
+    // send an empty description instead of null because the backend expects text
+    payload.description = payload.description ?? ''
     ;['min_cgpa', 'min_grad_year', 'max_grad_year'].forEach((key) => {
       payload[key] = payload[key] === null ? null : Number(payload[key])
     })

@@ -4,8 +4,14 @@ request and response schemas for job workflows.
 
 from datetime import date, datetime
 from decimal import Decimal
+from typing import Literal, get_args
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+
+# keep job type values identical to the seed data and frontend filters
+EmploymentType = Literal["Internship", "Full-time", "Part-time", "On-campus"]
+EMPLOYMENT_TYPE_VALUES = get_args(EmploymentType)
 
 
 class JobCreateRequest(BaseModel):
@@ -13,7 +19,7 @@ class JobCreateRequest(BaseModel):
 
     title: str = Field(min_length=2, max_length=200)
     description: str = Field(min_length=10, max_length=10000)
-    employment_type: str = Field(min_length=2, max_length=100)
+    employment_type: EmploymentType
     city: str = Field(min_length=2, max_length=100)
     is_remote: bool = False
     salary_min: Decimal | None = Field(default=None, ge=0)
@@ -46,7 +52,7 @@ class JobResponse(BaseModel):
     company_name: str
     location: str
     city: str
-    employment_type: str
+    employment_type: EmploymentType
     is_remote: bool
     salary_min: Decimal | None = None
     salary_max: Decimal | None = None

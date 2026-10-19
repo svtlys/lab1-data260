@@ -71,7 +71,7 @@ The required hand-built tools are:
 
 Each tool returns a string for success and failure. The loop logs one line per tool call with the tool name and arguments, records the tool-call count, and persists tool-call data. The API exposes the count and repair metadata. `OllamaClient.complete(messages, tools)` is available while the older `chat()` method remains compatible. The loop still stops after five iterations.
 
-## Reliability experiment
+## Reliability experiment: deterministic repair path
 
 The reliability experiment is at `backend/scripts/reliability_experiment.py`. It used a deterministic fake Ollama client and isolated in-memory SQLite, so it did not change real user data. It ran 20 assistant turns and classified valid calls, malformed arguments, unknown tools, text-only responses, lost chains, Ollama errors, database errors, and iteration-ceiling events.
 
@@ -89,6 +89,43 @@ The repair path identifies a recoverable error, reprompts once with that error, 
 | Iteration-ceiling events | 1 | 1 | Preserved |
 
 The reliability tests are in `backend/tests/test_reliability.py`, and the full experiment notes are in `docs/reliability_experiment.md`.
+
+## Live reliability evidence
+
+The live run is separate from the deterministic repair-path experiment above. On 2026-10-19, the 26-turn script used the isolated FastAPI backend at `http://127.0.0.1:9161`, the isolated database `p16_handshake_reliability`, and Ollama `qwen3:8b`.
+
+No save was approved and no cleanup SQL ran. The results were:
+
+| Classification | Count |
+| --- | ---: |
+| Total turns | 26 |
+| Valid and correct | 15 |
+| Ollama errors | 5 |
+| Wrong tool results | 3 |
+| Lost multi-step chains | 2 |
+| API/database error | 1 |
+| Total tool calls | 24 |
+| Live repair attempts | 0 |
+| Iteration-ceiling events | 0 |
+| Save attempts blocked by confirmation | 4 |
+| Approved saves | 0 |
+| `saved_items` created | 0 |
+
+Tool-call totals:
+
+- `search_jobs`: 8
+- `get_student_preferences`: 5
+- `get_job_details`: 4
+- `save_job_or_event`: 4
+- `search_events`: 3
+
+Read-only database verification after the run reported 25 assistant conversations, 91 assistant messages, 24 assistant tool logs, 1,500 applications, and 0 saved items. One failed turn did not create a conversation.
+
+Sanitized evidence files:
+
+- `docs/evidence/live_reliability_2026-10-19/live_reliability_results.json`
+- `docs/evidence/live_reliability_2026-10-19/live_reliability_results.md`
+- `docs/evidence/live_reliability_2026-10-19/live_transcripts.md`
 
 ## Route and test summary
 

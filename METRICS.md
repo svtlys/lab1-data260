@@ -39,7 +39,7 @@ Five poisoned-content queries were run before and after the defense:
 
 The defense labels retrieved job and event descriptions as untrusted database content, places them inside delimiters, and keeps them separate from the assistant's system instructions.
 
-## Reliability experiment
+## Reliability experiment: deterministic repair path
 
 The experiment used an isolated in-memory SQLite database and a deterministic fake Ollama client. It did not modify real user data.
 
@@ -55,6 +55,35 @@ The experiment used an isolated in-memory SQLite database and a deterministic fa
 | Iteration-ceiling events | 1 | 1 | Five-iteration ceiling preserved |
 
 The loop allows one repair attempt per run. It includes the specific recoverable error in a repair prompt, then stops retrying. The API also reports tool-call counts, repair attempts, failure mode, and whether the iteration ceiling was reached.
+
+## Reliability experiment: live Ollama run
+
+This is separate from the deterministic repair-path experiment above. It used the isolated database, the isolated FastAPI backend on port `9161`, and Ollama model `qwen3:8b` on 2026-10-19. It ran the full 26-turn live script without approving a save and without cleanup SQL.
+
+| Live result | Count |
+| --- | ---: |
+| Total turns | 26 |
+| Valid and correct | 15 |
+| Ollama errors | 5 |
+| Wrong tool results | 3 |
+| Lost multi-step chains | 2 |
+| API/database errors | 1 |
+| Total tool calls | 24 |
+| Live repair attempts | 0 |
+| Iteration-ceiling events | 0 |
+| Save attempts blocked by confirmation | 4 |
+| Approved saves | 0 |
+| `saved_items` created | 0 |
+
+Live tool-call totals were: `search_jobs` 8, `get_student_preferences` 5, `get_job_details` 4, `save_job_or_event` 4, and `search_events` 3.
+
+Read-only persistence verification after the run reported 25 assistant conversations, 91 assistant messages, 24 assistant tool logs, 1,500 applications, and 0 saved items. One failed turn did not create a conversation.
+
+Sanitized evidence is stored in:
+
+- `docs/evidence/live_reliability_2026-10-19/live_reliability_results.json`
+- `docs/evidence/live_reliability_2026-10-19/live_reliability_results.md`
+- `docs/evidence/live_reliability_2026-10-19/live_transcripts.md`
 
 ## Assistant interface metrics
 

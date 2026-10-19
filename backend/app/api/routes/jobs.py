@@ -14,7 +14,7 @@ from app.core.database import get_db
 from app.models.application import Application
 from app.models.job import Job
 from app.models.user import User
-from app.schemas.job import JobCreateRequest, JobResponse
+from app.schemas.job import EmploymentType, JobCreateRequest, JobResponse
 
 
 # group student job endpoints under /api/jobs
@@ -124,7 +124,7 @@ def get_my_jobs(
 def search_jobs(
     search: str | None = Query(default=None, max_length=100),
     city: str | None = Query(default=None, max_length=100),
-    employment_type: str | None = Query(default=None, max_length=100),
+    employment_type: EmploymentType | None = Query(default=None),
     is_remote: bool | None = None,
     current_user: User = Depends(require_student),
     db: Session = Depends(get_db),

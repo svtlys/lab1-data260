@@ -1,0 +1,58 @@
+[
+  {
+    "id": 10,
+    "group": "error",
+    "prompt": "Tell me more about job 999999",
+    "confirm_save": false,
+    "http_status": 200,
+    "tools_called": [
+      "get_job_details"
+    ],
+    "iterations": 2,
+    "repair_attempts": 1,
+    "backend_failure_mode": null,
+    "classification": "valid and correct",
+    "note": "",
+    "gate_outcome": "",
+    "seconds": 35.7,
+    "answer": "The job with ID 999999 couldn't be found in our system. This might mean the job ID is incorrect or the position has been removed. Would you like me to help you search for similar jobs or check other opportunities instead?"
+  },
+  {
+    "id": 18,
+    "group": "error",
+    "prompt": "Save job 999999",
+    "confirm_save": true,
+    "http_status": 200,
+    "tools_called": [
+      "save_job_or_event",
+      "get_job_details"
+    ],
+    "iterations": 3,
+    "repair_attempts": 1,
+    "backend_failure_mode": null,
+    "classification": "valid and correct",
+    "note": "",
+    "gate_outcome": "other",
+    "seconds": 50.3,
+    "answer": "The job with ID 999999 could not be found in the system. This might mean the job ID is incorrect, outdated, or doesn't exist. Since the save operation failed, nothing was saved. Would you like to try a different job ID or check another opportunity?"
+  },
+  {
+    "id": 24,
+    "group": "edge",
+    "prompt": "Find me a job",
+    "confirm_save": false,
+    "http_status": 200,
+    "tools_called": [
+      "get_student_preferences",
+      "search_jobs"
+    ],
+    "iterations": 3,
+    "repair_attempts": 0,
+    "backend_failure_mode": null,
+    "classification": "valid and correct",
+    "note": "",
+    "gate_outcome": "",
+    "seconds": 62.9,
+    "answer": "It looks like there are no current job opportunities matching your criteria (Sunnyvale, Electrical Engineering, React) at this time. Would you like to:\n\n1. Try adjusting your search terms or location?\n2. Look for related events instead?\n3. Save this search and check back later?\n\nLet me know how you'd like to proceed!"
+  }
+]

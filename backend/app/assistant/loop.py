@@ -12,6 +12,7 @@ from typing import Any, Callable
 from sqlalchemy.orm import Session
 
 from app.assistant.confirmation import SAVE_TOOL_NAME, confirm_action
+from app.assistant.guards import protect_instructions
 from app.assistant.tools import (
     AssistantToolError,
     get_job_details,
@@ -299,6 +300,10 @@ class AssistantLoop:
             messages.append(assistant_message)
 
             if not tool_calls:
+                # never show or store text that quotes the system prompt
+                assistant_message["content"] = protect_instructions(
+                    assistant_message["content"]
+                )
                 logger.info(
                     "assistant_run tool_call_count=%s iterations=%s reached_iteration_ceiling=false",
                     len(tool_call_log),

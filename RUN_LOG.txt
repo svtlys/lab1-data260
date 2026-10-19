@@ -88,6 +88,43 @@ After one bounded repair attempt:
   lost chains 2 | Ollama errors 1 | database errors unresolved 0
   iteration ceilings 1
 
+7b. live reliability testing (macOS, real model)
+
+Setup:
+  MySQL on port 3307 (database p16_handshake, seeded)
+  Ollama running qwen3:8b
+  backend started from lab1-review/backend:
+    python -m uvicorn app.main:app --host 127.0.0.1 --port 9160
+
+Trial run (3 turns):
+  python scripts/live_reliability_run.py --only 1,2,3
+  result: 3 of 3 valid and correct
+
+Full run (26 turns):
+  caffeinate -i python scripts/live_reliability_run.py
+  result: 20 valid and correct | 2 wrong results (turns 3, 4) | 1 system prompt leak (turn 26) | 3 HTTP 500 (turns 10, 18, 24)
+  average response time 59.6 s | repairs 0
+  saved as docs/live_reliability_run1_results.md/.json and docs/live_run1_transcripts.md
+
+Finding: HTTP 500 on turns 10, 18, 24. Backend log showed IntegrityError (foreign key fk_message_conversation) when inserting assistant_messages for a new conversation after a tool error rolled back the session.
+Fix: backend/app/api/routes/assistant.py now commits the new conversation immediately.
+
+Re-run after the fix:
+  python scripts/live_reliability_run.py --only 10,18,24
+  result: 3 of 3 valid and correct | repairs: turn 10 = 1, turn 18 = 1, turn 24 = 0
+
+Finding: turns 3 and 4 returned no jobs although the data exists (SELECT counts: remote Cupertino 19, internships Mountain View 32). assistant_tool_logs showed the model sent employment_type "remote" (turn 3) and query "internship" (turn 4).
+Fix: search_jobs parameter descriptions clarified in backend/app/assistant/loop.py; system prompt now says not to reveal its instructions.
+
+Re-run after the prompt fixes:
+  python scripts/live_reliability_run.py --only 3,4,26
+  result (after prompt and description changes only): turns 3, 4 and 26 still failed (3 and 4 returned no jobs; 26 leaked the system prompt)
+  fix 2: backend/app/assistant/guards.py (argument normalization for search_jobs, and removal of quoted system prompt text from answers), unit tests in tests/test_guards.py
+
+Re-run after fix 2:
+  python scripts/live_reliability_run.py --only 3,4,26
+  result: [update]
+
 8. source-control safety
 
 git diff --check was run from the repository root. No whitespace errors were reported. No commit or push was performed during this documentation step.

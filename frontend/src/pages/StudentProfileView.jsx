@@ -54,7 +54,7 @@ export default function StudentProfileView() {
     : ''
 
   return (
-    <div className="page-container" style={{ maxWidth: 720 }}>
+    <div className="page-container" style={{ maxWidth: '45rem' }}>
       <button type="button" className="btn btn-link text-decoration-none px-0" onClick={() => navigate(-1)}>
         &larr; Back
       </button>

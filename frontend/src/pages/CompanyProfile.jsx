@@ -110,7 +110,7 @@ export default function CompanyProfile() {
   const showPicture = /^https?:\/\/\S+$/i.test(pictureUrl)
 
   return (
-    <div className="page-container" style={{ maxWidth: 720 }}>
+    <div className="page-container" style={{ maxWidth: '45rem' }}>
       <h2 className="mb-4">Company profile</h2>
 
       {loading && <LoadingSpinner label="Loading your company profile..." />}

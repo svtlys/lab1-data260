@@ -57,7 +57,7 @@ export default function CreateJob() {
   }
 
   return (
-    <div className="page-container" style={{ maxWidth: 720 }}>
+    <div className="page-container" style={{ maxWidth: '45rem' }}>
       <h2 className="mb-4">Post a job</h2>
 
       <div className="card shadow-sm">

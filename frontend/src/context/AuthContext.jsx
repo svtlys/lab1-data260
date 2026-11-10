@@ -1,64 +1,49 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import * as authService from '../services/authService'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  login as loginThunk,
+  logout as logoutThunk,
+  sessionExpired,
+  selectIsAuthenticated,
+  selectUser,
+} from '../store/slices/authSlice'
 
-const AuthContext = createContext(null)
+// Auth state now lives in the Redux "auth" slice. This file keeps the old
+// AuthProvider/useAuth names so existing pages (Navbar, Login, ProtectedRoute,
+// Home) keep working unchanged.
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [loading, setLoading] = useState(true)
-
-  // On first load, restore whatever we already had in localStorage so a
-  // page refresh doesn't kick the user back to the login page.
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user')
-    const storedToken = localStorage.getItem('access_token')
-    if (storedUser && storedToken) {
-      try {
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem('user')
-      }
-    }
-    setLoading(false)
-  }, [])
+  const dispatch = useDispatch()
 
   // api.js fires this when the backend rejects our token (401).
   useEffect(() => {
     function handleForcedLogout() {
-      setUser(null)
+      dispatch(sessionExpired())
     }
     window.addEventListener('auth:logout', handleForcedLogout)
     return () => window.removeEventListener('auth:logout', handleForcedLogout)
-  }, [])
+  }, [dispatch])
 
-  async function login(email, password) {
-    const data = await authService.login(email, password)
-    localStorage.setItem('access_token', data.access_token)
-    localStorage.setItem('user', JSON.stringify(data.user))
-    setUser(data.user)
-    return data.user
-  }
-
-  function logout() {
-    authService.logout()
-    setUser(null)
-  }
-
-  const value = {
-    user,
-    isAuthenticated: Boolean(user),
-    loading,
-    login,
-    logout,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return <>{children}</>
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth must be used within an AuthProvider')
+  const dispatch = useDispatch()
+  const user = useSelector(selectUser)
+  const isAuthenticated = useSelector(selectIsAuthenticated)
+
+  async function login(email, password) {
+    const result = await dispatch(loginThunk({ email, password }))
+    if (loginThunk.rejected.match(result)) {
+      throw new Error(result.payload || 'Could not log in.')
+    }
+    return result.payload
   }
-  return ctx
+
+  function logout() {
+    dispatch(logoutThunk())
+  }
+
+  // the session is restored synchronously from localStorage, so there is no loading phase
+  return { user, isAuthenticated, loading: false, login, logout }
 }

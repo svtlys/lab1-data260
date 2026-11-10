@@ -1,24 +1,29 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import { Link } from 'react-router-dom'
-import * as jobService from '../services/jobService'
-import { extractErrorMessage } from '../services/api'
+import {
+  fetchMyApplications,
+  selectApplications,
+  selectApplicationsError,
+  selectApplicationsStatus,
+} from '../store/slices/applicationsSlice'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 import EmptyState from '../components/EmptyState.jsx'
 import StatusBadge from '../components/StatusBadge.jsx'
 
 export default function MyApplications() {
-  const [applications, setApplications] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  // applications live in the Redux "applications" slice
+  const dispatch = useDispatch()
+  const applications = useSelector(selectApplications)
+  const status = useSelector(selectApplicationsStatus)
+  const error = useSelector(selectApplicationsError) || ''
+  // show the spinner only on the first load; later visits show the cached list while it refreshes
+  const loading = status === 'idle' || (status === 'loading' && applications.length === 0)
 
   useEffect(() => {
-    jobService
-      .getMyApplications()
-      .then(setApplications)
-      .catch((err) => setError(extractErrorMessage(err, 'Could not load your applications.')))
-      .finally(() => setLoading(false))
-  }, [])
+    dispatch(fetchMyApplications())
+  }, [dispatch])
 
   return (
     <div className="page-container">

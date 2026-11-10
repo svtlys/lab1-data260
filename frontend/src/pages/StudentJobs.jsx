@@ -1,6 +1,23 @@
 import React, { useEffect, useState } from 'react'
-import * as jobService from '../services/jobService'
-import { extractErrorMessage } from '../services/api'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  applyForJob,
+  fetchMyApplications,
+  selectAppliedJobIds,
+  selectApplyingJobId,
+} from '../store/slices/applicationsSlice'
+import {
+  clearJobFilters,
+  fetchJobs,
+  initialJobFilters,
+  selectJob,
+  selectJobFilters,
+  selectJobs,
+  selectJobsError,
+  selectJobsStatus,
+  selectSelectedJob,
+  setJobFilter,
+} from '../store/slices/jobsSlice'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 
@@ -11,13 +28,6 @@ const EMPLOYMENT_TYPE_OPTIONS = [
   { label: 'On-campus', value: 'On-campus' },
 ]
 
-const initialFilters = {
-  search: '',
-  city: '',
-  employment_type: '',
-  is_remote: '',
-}
-
 function formatSalary(job) {
   const { salary_min: min, salary_max: max } = job
   if (min == null && max == null) return 'Not specified'
@@ -27,60 +37,47 @@ function formatSalary(job) {
 }
 
 export default function StudentJobs() {
-  const [filters, setFilters] = useState(initialFilters)
-  const [jobs, setJobs] = useState([])
-  const [selectedJob, setSelectedJob] = useState(null)
-  const [appliedJobIds, setAppliedJobIds] = useState([])
+  // job search state lives in the Redux "jobs" slice, so filters and results survive leaving the page
+  const dispatch = useDispatch()
+  const filters = useSelector(selectJobFilters)
+  const jobs = useSelector(selectJobs)
+  const selectedJob = useSelector(selectSelectedJob)
+  const jobsStatus = useSelector(selectJobsStatus)
+  const loadError = useSelector(selectJobsError)
+  const loading = jobsStatus === 'loading' || jobsStatus === 'idle'
+
+  const appliedJobIds = useSelector(selectAppliedJobIds)
+  const applyingId = useSelector(selectApplyingJobId)
   const [resumeFile, setResumeFile] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [applyingId, setApplyingId] = useState(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  async function loadJobs(activeFilters = filters) {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await jobService.searchJobs(activeFilters)
-      setJobs(data)
-      setSelectedJob((current) => {
-        if (!current) return data[0] || null
-        return data.find((job) => job.id === current.id) || data[0] || null
-      })
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Could not load jobs.'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadJobs(initialFilters)
+    dispatch(fetchJobs(filters))
     // remember which jobs this student already applied to
-    jobService
-      .getMyApplications()
-      .then((apps) => setAppliedJobIds(apps.map((app) => app.job_id)))
-      .catch(() => {})
+    dispatch(fetchMyApplications())
+    // only on first load; later searches come from the form
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function handleChange(event) {
-    setFilters({ ...filters, [event.target.name]: event.target.value })
+    dispatch(setJobFilter({ name: event.target.name, value: event.target.value }))
   }
 
   function handleSubmit(event) {
     event.preventDefault()
     setMessage('')
-    loadJobs(filters)
+    dispatch(fetchJobs(filters))
   }
 
   function clearFilters() {
-    setFilters(initialFilters)
+    dispatch(clearJobFilters())
     setMessage('')
-    loadJobs(initialFilters)
+    dispatch(fetchJobs(initialJobFilters))
   }
 
-  function selectJob(job) {
-    setSelectedJob(job)
+  function handleSelectJob(job) {
+    dispatch(selectJob(job.id))
     setResumeFile(null)
     setMessage('')
     setError('')
@@ -105,18 +102,15 @@ export default function StudentJobs() {
   }
 
   async function handleApply(jobId) {
-    setApplyingId(jobId)
     setError('')
     setMessage('')
     try {
-      await jobService.applyToJob(jobId, resumeFile)
-      setAppliedJobIds((current) => [...current, jobId])
+      await dispatch(applyForJob({ jobId, resumeFile })).unwrap()
       setResumeFile(null)
       setMessage('Application submitted. You can track it under My applications.')
     } catch (err) {
-      setError(extractErrorMessage(err, 'Could not submit your application.'))
-    } finally {
-      setApplyingId(null)
+      // unwrap() throws the rejectWithValue message from the thunk
+      setError(typeof err === 'string' ? err : 'Could not submit your application.')
     }
   }
 
@@ -129,7 +123,7 @@ export default function StudentJobs() {
         <p className="text-muted mb-0">Search and filter jobs in the Pair 16 city set.</p>
       </div>
 
-      <ErrorAlert message={error} />
+      <ErrorAlert message={error || loadError} />
       {message && <div className="alert alert-success">{message}</div>}
 
       <div className="card shadow-sm mb-4">
@@ -227,7 +221,7 @@ export default function StudentJobs() {
                       <button
                         type="button"
                         className="btn btn-outline-primary mt-auto"
-                        onClick={() => selectJob(job)}
+                        onClick={() => handleSelectJob(job)}
                       >
                         View details
                       </button>

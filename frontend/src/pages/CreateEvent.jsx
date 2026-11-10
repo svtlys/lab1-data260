@@ -78,7 +78,7 @@ export default function CreateEvent() {
   }
 
   return (
-    <div className="page-container" style={{ maxWidth: 760 }}>
+    <div className="page-container" style={{ maxWidth: '47.5rem' }}>
       <h2 className="mb-4">Create an event</h2>
 
       <div className="card shadow-sm">

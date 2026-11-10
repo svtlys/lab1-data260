@@ -1,6 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import * as eventService from '../services/eventService'
-import { extractErrorMessage } from '../services/api'
+import React, { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  fetchRegisteredEvents,
+  selectRegisteredError,
+  selectRegisteredEvents,
+  selectRegisteredStatus,
+} from '../store/slices/eventsSlice'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 
@@ -12,30 +17,16 @@ function formatEventDate(value) {
 }
 
 export default function StudentRegisteredEvents() {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const dispatch = useDispatch()
+  const events = useSelector(selectRegisteredEvents)
+  const status = useSelector(selectRegisteredStatus)
+  const error = useSelector(selectRegisteredError) || ''
+  const loading = status === 'idle' || (status === 'loading' && events.length === 0)
 
+  // load the student's registered events when the page opens
   useEffect(() => {
-    let cancelled = false
-
-    // load the student's registered events when the page opens
-    eventService
-      .getRegisteredEvents()
-      .then((data) => {
-        if (!cancelled) setEvents(data)
-      })
-      .catch((err) => {
-        if (!cancelled) setError(extractErrorMessage(err, 'Could not load registered events.'))
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    dispatch(fetchRegisteredEvents())
+  }, [dispatch])
 
   return (
     <div className="page-container">

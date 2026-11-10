@@ -3,26 +3,26 @@ import { Link, NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
 const GUEST_LINKS = [
-  { to: '/login', label: 'Log in' },
-  { to: '/signup/student', label: 'Student sign up' },
-  { to: '/signup/company', label: 'Company sign up' },
+  { to: '/login', label: 'Log In' },
+  { to: '/signup/student', label: 'Student Sign Up' },
+  { to: '/signup/company', label: 'Company Sign Up' },
 ]
 
 const STUDENT_LINKS = [
   { to: '/dashboard/student', label: 'Dashboard' },
   { to: '/jobs', label: 'Jobs' },
-  { to: '/applications', label: 'My applications' },
+  { to: '/applications', label: 'My Applications' },
   { to: '/events', label: 'Events' },
-  { to: '/events/registered', label: 'My events' },
+  { to: '/events/registered', label: 'My Events' },
   { to: '/assistant', label: 'Assistant' },
 ]
 
 const COMPANY_LINKS = [
   { to: '/dashboard/company', label: 'Dashboard' },
-  { to: '/company/jobs', label: 'My jobs' },
-  { to: '/company/jobs/new', label: 'Post a job' },
+  { to: '/company/jobs', label: 'My Jobs' },
+  { to: '/company/jobs/new', label: 'Post a Job' },
   { to: '/company/events', label: 'Events' },
-  { to: '/company/students', label: 'Find students' },
+  { to: '/company/students', label: 'Find Students' },
   { to: '/company/profile', label: 'Profile' },
 ]
 
@@ -48,7 +48,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark navbar-gradient">
-      <div className="container">
+      <div className="container-fluid px-3 px-xl-5">
         <Link className="navbar-brand" to="/" onClick={closeMenu}>
           Handshake &middot; Pair 16
         </Link>

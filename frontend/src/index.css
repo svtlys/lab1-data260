@@ -8,7 +8,14 @@
   --font-body: 'Inter', 'Segoe UI', sans-serif;
 }
 
+/* Scale the whole UI with the screen: 16px on laptops, up to 20px on large monitors.
+   Bootstrap sizes everything in rem, so text, buttons, cards and spacing grow together. */
+html {
+  font-size: clamp(16px, 0.5vw + 9px, 20px);
+}
+
 body {
+  min-height: 100vh;
   background-color: #f4f5fb;
   font-family: var(--font-body);
   color: #262a3d;
@@ -28,13 +35,15 @@ a:hover {
 
 /* Layout helpers used across pages */
 .page-container {
-  max-width: 960px;
+  /* fills most of the window, but stops growing on very wide screens (rem grows with the font above) */
+  width: 100%;
+  max-width: min(94vw, 80rem);
   margin: 0 auto;
   padding: 2rem 1rem;
 }
 
 .form-card {
-  max-width: 480px;
+  max-width: 30rem;
   margin: 0 auto;
 }
 

@@ -96,7 +96,11 @@ class OllamaClient:
             "model": self.model,
             "messages": list(messages),
             "stream": False,
-            "options": {"temperature": temperature},
+            # num_ctx makes the context window match the budget the assistant tracks
+            "options": {
+                "temperature": temperature,
+                "num_ctx": settings.assistant_context_tokens,
+            },
         }
 
         if tools:

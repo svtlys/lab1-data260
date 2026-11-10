@@ -109,6 +109,8 @@ def _event_dict(event: Event) -> dict[str, Any]:
         "event_type": event.event_type,
         "is_virtual": event.is_virtual,
         "capacity": event.capacity,
+        "eligible_majors": event.eligible_majors,
+        "eligibility_note": event.eligibility_note,
     }
 
 
@@ -220,6 +222,7 @@ def search_events(
     start_date: datetime | str | None = None,
     end_date: datetime | str | None = None,
     limit: int = 10,
+    major: str | None = None,
 ) -> str:
     """search events using optional student-friendly filters."""
 
@@ -254,6 +257,16 @@ def search_events(
 
     if end_datetime:
         statement = statement.where(Event.event_date <= end_datetime)
+
+    if major:
+        # eligibility filter: events open to this major, or to every major (no list set)
+        statement = statement.where(
+            or_(
+                Event.eligible_majors.is_(None),
+                Event.eligible_majors == "",
+                Event.eligible_majors.like(f"%{major.strip()}%"),
+            )
+        )
 
     statement = statement.order_by(Event.event_date.asc()).limit(limit)
     return [_event_dict(event) for event in db.scalars(statement).all()]

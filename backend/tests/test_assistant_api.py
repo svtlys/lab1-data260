@@ -26,7 +26,7 @@ class FakeAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history, confirmed_save=False):
+    def run(self, db, student_id, user_message, history, confirmed_save=False, trace_id=None):
         # return one assistant turn with one logged tool call
         return AssistantRunResult(
             answer="I found a useful opportunity.",

@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen3:8b"
     ollama_timeout_seconds: float = 120.0
+    # context window the assistant plans around (also sent to Ollama as num_ctx)
+    assistant_context_tokens: int = 8192
 
     model_config = SettingsConfigDict(
         env_file=Path(__file__).resolve().parents[2] / ".env",

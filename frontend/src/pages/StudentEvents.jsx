@@ -1,17 +1,23 @@
 import React, { useEffect, useState } from 'react'
-import * as eventService from '../services/eventService'
-import { extractErrorMessage } from '../services/api'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  clearEventFilters,
+  fetchEvents,
+  fetchRegisteredEvents,
+  initialEventFilters,
+  registerForEvent,
+  selectEvent,
+  selectEventFilters,
+  selectEvents,
+  selectEventsError,
+  selectEventsStatus,
+  selectRegisteredEventIds,
+  selectRegisteringId,
+  selectSelectedEvent,
+  setEventFilter,
+} from '../store/slices/eventsSlice'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
-
-const initialFilters = {
-  search: '',
-  city: '',
-  event_type: '',
-  is_virtual: '',
-  start_date: '',
-  end_date: '',
-}
 
 function formatEventDate(value) {
   return new Date(value).toLocaleString([], {
@@ -21,66 +27,49 @@ function formatEventDate(value) {
 }
 
 export default function StudentEvents() {
-  const [filters, setFilters] = useState(initialFilters)
-  const [events, setEvents] = useState([])
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [registeredEventIds, setRegisteredEventIds] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [registeringId, setRegisteringId] = useState(null)
+  const dispatch = useDispatch()
+  const filters = useSelector(selectEventFilters)
+  const events = useSelector(selectEvents)
+  const selectedEvent = useSelector(selectSelectedEvent)
+  const eventsStatus = useSelector(selectEventsStatus)
+  const loadError = useSelector(selectEventsError)
+  const registeredEventIds = useSelector(selectRegisteredEventIds)
+  const registeringId = useSelector(selectRegisteringId)
+  const loading = eventsStatus === 'loading' || eventsStatus === 'idle'
+
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  async function loadEvents(activeFilters = filters) {
-    setLoading(true)
-    setError('')
-
-    try {
-      const data = await eventService.searchEvents(activeFilters)
-      setEvents(data)
-      setSelectedEvent((current) => {
-        if (!current) return data[0] || null
-        return data.find((event) => event.id === current.id) || data[0] || null
-      })
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Could not load events.'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadEvents(initialFilters)
+    dispatch(fetchEvents(filters))
+    dispatch(fetchRegisteredEvents())
   }, [])
 
   function handleChange(event) {
-    setFilters({ ...filters, [event.target.name]: event.target.value })
+    dispatch(setEventFilter({ name: event.target.name, value: event.target.value }))
   }
 
   function handleSubmit(event) {
     event.preventDefault()
     setMessage('')
-    loadEvents(filters)
+    dispatch(fetchEvents(filters))
   }
 
   function clearFilters() {
-    setFilters(initialFilters)
+    dispatch(clearEventFilters())
     setMessage('')
-    loadEvents(initialFilters)
+    dispatch(fetchEvents(initialEventFilters))
   }
 
   async function handleRegister(eventId) {
-    setRegisteringId(eventId)
     setError('')
     setMessage('')
 
     try {
-      await eventService.registerForEvent(eventId)
-      setRegisteredEventIds((current) => [...current, eventId])
+      await dispatch(registerForEvent(eventId)).unwrap()
       setMessage('You are registered for this event.')
     } catch (err) {
-      setError(extractErrorMessage(err, 'Could not register for this event.'))
-    } finally {
-      setRegisteringId(null)
+      setError(typeof err === 'string' ? err : 'Could not register for this event.')
     }
   }
 
@@ -93,7 +82,7 @@ export default function StudentEvents() {
         </div>
       </div>
 
-      <ErrorAlert message={error} />
+      <ErrorAlert message={error || loadError} />
       {message && <div className="alert alert-success">{message}</div>}
 
       <div className="card shadow-sm mb-4">
@@ -198,7 +187,7 @@ export default function StudentEvents() {
                       <button
                         type="button"
                         className="btn btn-outline-primary mt-auto"
-                        onClick={() => setSelectedEvent(event)}
+                        onClick={() => dispatch(selectEvent(event.id))}
                       >
                         View details
                       </button>

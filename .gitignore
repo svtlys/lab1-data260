@@ -45,3 +45,5 @@ credentials*.json
 # temporary files
 *.tmp
 *.temp
+
+compose.lab2.env

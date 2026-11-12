@@ -1,6 +1,16 @@
 import React, { useState } from 'react'
-import * as assistantService from '../services/assistantService'
-import { extractErrorMessage } from '../services/api'
+import { useDispatch, useSelector } from 'react-redux'
+import {
+  newConversation,
+  saveDeclined,
+  selectAssistantError,
+  selectAssistantLoading,
+  selectLastRun,
+  selectLastToolCalls,
+  selectMessages,
+  selectPendingSave,
+  sendMessage,
+} from '../store/slices/assistantSlice'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 
@@ -19,98 +29,42 @@ function renderInline(text) {
     })
 }
 
-function parseArguments(argumentsValue) {
-  if (argumentsValue && typeof argumentsValue === 'object') return argumentsValue
-  try {
-    return JSON.parse(argumentsValue)
-  } catch {
-    return {}
-  }
-}
-
-function findDeclinedSave(toolCalls) {
-  for (const call of toolCalls || []) {
-    if (call.tool_name !== 'save_job_or_event') continue
-    const outcome = `${typeof call.result === 'string' ? call.result : JSON.stringify(call.result ?? '')} ${call.error ?? ''}`
-    if (!/cancelled|confirmation required/i.test(outcome)) continue
-    const args = parseArguments(call.arguments)
-    const itemType = args.item_type || args.type || (args.job_id ? 'job' : args.event_id ? 'event' : '')
-    const itemId = args.item_id ?? args.job_id ?? args.event_id ?? args.id ?? ''
-    return { itemType, itemId }
-  }
-  return null
-}
-
 export default function AssistantChat() {
+  const dispatch = useDispatch()
+  const messages = useSelector(selectMessages)
+  const lastToolCalls = useSelector(selectLastToolCalls)
+  const lastRun = useSelector(selectLastRun)
+  const pendingSave = useSelector(selectPendingSave)
+  const loading = useSelector(selectAssistantLoading)
+  const error = useSelector(selectAssistantError) || ''
   const [message, setMessage] = useState('')
-  const [conversationId, setConversationId] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [lastToolCalls, setLastToolCalls] = useState([])
-  const [lastRun, setLastRun] = useState(null)
-  const [pendingSave, setPendingSave] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  async function send(text, confirmSave = false) {
-    setError('')
-    setLoading(true)
-    setPendingSave(null)
-    setMessages((current) => [...current, { role: 'user', content: text }])
-
-    try {
-      const response = await assistantService.sendAssistantMessage(text, conversationId, confirmSave)
-      setConversationId(response.conversation_id)
-      setMessages((current) => [...current, { role: 'assistant', content: response.answer }])
-      const calls = response.tool_calls || []
-      setLastToolCalls(calls)
-      setLastRun({
-        iterations: response.iterations,
-        toolCallCount: response.tool_call_count,
-        repairAttempts: response.repair_attempts,
-        failureMode: response.failure_mode,
-        hitCeiling: response.reached_iteration_ceiling,
-      })
-      setPendingSave(findDeclinedSave(calls))
-    } catch (err) {
-      setError(extractErrorMessage(err, 'The assistant could not answer right now.'))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   function handleSubmit(event) {
     event.preventDefault()
     const trimmed = message.trim()
     if (!trimmed || loading) return
     setMessage('')
-    send(trimmed)
+    dispatch(sendMessage({ text: trimmed }))
   }
 
   function approveSave() {
     if (!pendingSave || loading) return
-    send(
-      pendingSave.itemType && pendingSave.itemId
-        ? `Yes, please save the ${pendingSave.itemType} with id ${pendingSave.itemId}.`
-        : 'Yes, please save the item you just asked about.',
-      true,
+    dispatch(
+      sendMessage({
+        text: pendingSave.itemType && pendingSave.itemId
+          ? `Yes, please save the ${pendingSave.itemType} with id ${pendingSave.itemId}.`
+          : 'Yes, please save the item you just asked about.',
+        confirmSave: true,
+      }),
     )
   }
 
   function declineSave() {
-    setPendingSave(null)
-    setMessages((current) => [
-      ...current,
-      { role: 'assistant', content: 'Okay, I did not save it.', local: true },
-    ])
+    dispatch(saveDeclined())
   }
 
   function startNewConversation() {
-    setConversationId(null)
-    setMessages([])
-    setLastToolCalls([])
-    setLastRun(null)
-    setPendingSave(null)
-    setError('')
+    dispatch(newConversation())
   }
 
   return (

@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_company
 from app.core.database import get_db
+from app.core.mongo import get_mongo_database
 from app.models.company_profile import CompanyProfile
 from app.models.user import User
 from app.schemas.company import CompanyProfileResponse, CompanyProfileUpdateRequest
@@ -50,6 +51,35 @@ def find_company_profile(current_user: User, db: Session) -> CompanyProfile:
     return profile
 
 
+def mongo_company_profile_response(profile: dict) -> dict:
+    """map one Mongo company profile to the existing response shape."""
+
+    return {
+        "id": int(profile["id"]),
+        "user_id": int(profile["user_id"]),
+        "company_name": profile["company_name"],
+        "location": profile["location"],
+        "description": profile.get("description"),
+        "contact_phone": profile.get("contact_phone"),
+        "profile_picture_url": profile.get("profile_picture_url"),
+    }
+
+
+def _get_company_profile_from_mongo(
+    user_id: int,
+) -> tuple[bool, dict | None]:
+    """return Mongo availability and one company profile without Mongo errors."""
+
+    try:
+        database = get_mongo_database()
+        if database is None:
+            return False, None
+        profile = database["company_profiles"].find_one({"user_id": user_id})
+        return True, None if profile is None else mongo_company_profile_response(profile)
+    except Exception:
+        return False, None
+
+
 @router.get(
     "/me",
     response_model=CompanyProfileResponse,
@@ -59,6 +89,17 @@ def get_my_company_profile(
     db: Session = Depends(get_db),
 ):
     """return the logged-in company's profile."""
+
+    mongo_available, mongo_profile = _get_company_profile_from_mongo(
+        current_user.id
+    )
+    if mongo_available:
+        if mongo_profile is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="company profile was not found",
+            )
+        return mongo_profile
 
     return find_company_profile(current_user, db)
 

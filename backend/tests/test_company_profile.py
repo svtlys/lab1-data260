@@ -6,6 +6,7 @@ import asyncio
 from io import BytesIO
 from pathlib import Path
 from unittest import TestCase
+from unittest.mock import patch
 
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import create_engine
@@ -26,6 +27,26 @@ from app.core.database import Base
 from app.models.company_profile import CompanyProfile
 from app.models.user import User, UserRole
 from app.schemas.company import CompanyProfileUpdateRequest
+from app.schemas.company import CompanyProfileResponse
+
+
+class FakeMongoCollection:
+    def __init__(self, documents):
+        self.documents = documents
+
+    def find_one(self, query):
+        for document in self.documents:
+            if all(document.get(field) == value for field, value in query.items()):
+                return document
+        return None
+
+
+class FakeMongoDatabase:
+    def __init__(self, documents):
+        self.collections = {"company_profiles": FakeMongoCollection(documents)}
+
+    def __getitem__(self, collection):
+        return self.collections[collection]
 
 
 class CompanyProfileRouteTests(TestCase):
@@ -76,6 +97,19 @@ class CompanyProfileRouteTests(TestCase):
         self.db.commit()
         self.db.close()
 
+    def migrated_company_documents(self):
+        return [
+            {
+                "id": self.profile.id,
+                "user_id": self.profile.user_id,
+                "company_name": self.profile.company_name,
+                "location": self.profile.location,
+                "description": self.profile.description,
+                "contact_phone": self.profile.contact_phone,
+                "profile_picture_url": self.profile.profile_picture_url,
+            }
+        ]
+
     def test_company_can_read_and_update_own_profile(self):
         profile = get_my_company_profile(self.company_user, self.db)
         self.assertEqual(profile.company_name, "Test Company")
@@ -92,6 +126,30 @@ class CompanyProfileRouteTests(TestCase):
         self.assertEqual(updated.description, "A local technology company.")
         self.assertEqual(updated.contact_phone, "408-555-0100")
         self.assertEqual(updated.location, "Sunnyvale")
+
+    def test_mongo_company_read_matches_mysql_response(self):
+        mysql_profile = CompanyProfileResponse.model_validate(
+            get_my_company_profile(self.company_user, self.db)
+        ).model_dump()
+        database = FakeMongoDatabase(self.migrated_company_documents())
+
+        with patch(
+            "app.api.routes.company.get_mongo_database",
+            return_value=database,
+        ):
+            mongo_profile = get_my_company_profile(self.company_user, self.db)
+
+        self.assertEqual(mongo_profile, mysql_profile)
+        self.assertNotIn("_id", mongo_profile)
+
+    def test_company_read_falls_back_to_mysql_when_mongo_is_unavailable(self):
+        with patch(
+            "app.api.routes.company.get_mongo_database",
+            side_effect=RuntimeError("mongo unavailable"),
+        ):
+            profile = get_my_company_profile(self.company_user, self.db)
+
+        self.assertEqual(profile.company_name, "Test Company")
 
     def test_student_cannot_read_company_profile(self):
         with self.assertRaises(HTTPException) as context:

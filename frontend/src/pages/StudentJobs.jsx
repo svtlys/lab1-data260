@@ -1,6 +1,19 @@
 import React, { useEffect, useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
 import * as jobService from '../services/jobService'
 import { extractErrorMessage } from '../services/api'
+import {
+  clearJobFilters,
+  fetchJobs,
+  initialJobFilters,
+  selectJob,
+  selectJobFilters,
+  selectJobs,
+  selectJobsError,
+  selectJobsStatus,
+  selectSelectedJob,
+  setJobFilter,
+} from '../store/slices/jobsSlice'
 import LoadingSpinner from '../components/LoadingSpinner.jsx'
 import ErrorAlert from '../components/ErrorAlert.jsx'
 
@@ -11,13 +24,6 @@ const EMPLOYMENT_TYPE_OPTIONS = [
   { label: 'On-campus', value: 'On-campus' },
 ]
 
-const initialFilters = {
-  search: '',
-  city: '',
-  employment_type: '',
-  is_remote: '',
-}
-
 function formatSalary(job) {
   const { salary_min: min, salary_max: max } = job
   if (min == null && max == null) return 'Not specified'
@@ -27,35 +33,22 @@ function formatSalary(job) {
 }
 
 export default function StudentJobs() {
-  const [filters, setFilters] = useState(initialFilters)
-  const [jobs, setJobs] = useState([])
-  const [selectedJob, setSelectedJob] = useState(null)
+  const dispatch = useDispatch()
+  const filters = useSelector(selectJobFilters)
+  const jobs = useSelector(selectJobs)
+  const selectedJob = useSelector(selectSelectedJob)
+  const jobsStatus = useSelector(selectJobsStatus)
+  const loadError = useSelector(selectJobsError)
+  const loading = jobsStatus === 'loading' || jobsStatus === 'idle'
+
   const [appliedJobIds, setAppliedJobIds] = useState([])
   const [resumeFile, setResumeFile] = useState(null)
-  const [loading, setLoading] = useState(true)
   const [applyingId, setApplyingId] = useState(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
-  async function loadJobs(activeFilters = filters) {
-    setLoading(true)
-    setError('')
-    try {
-      const data = await jobService.searchJobs(activeFilters)
-      setJobs(data)
-      setSelectedJob((current) => {
-        if (!current) return data[0] || null
-        return data.find((job) => job.id === current.id) || data[0] || null
-      })
-    } catch (err) {
-      setError(extractErrorMessage(err, 'Could not load jobs.'))
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    loadJobs(initialFilters)
+    dispatch(fetchJobs(filters))
     // remember which jobs this student already applied to
     jobService
       .getMyApplications()
@@ -64,23 +57,23 @@ export default function StudentJobs() {
   }, [])
 
   function handleChange(event) {
-    setFilters({ ...filters, [event.target.name]: event.target.value })
+    dispatch(setJobFilter({ name: event.target.name, value: event.target.value }))
   }
 
   function handleSubmit(event) {
     event.preventDefault()
     setMessage('')
-    loadJobs(filters)
+    dispatch(fetchJobs(filters))
   }
 
   function clearFilters() {
-    setFilters(initialFilters)
+    dispatch(clearJobFilters())
     setMessage('')
-    loadJobs(initialFilters)
+    dispatch(fetchJobs(initialJobFilters))
   }
 
-  function selectJob(job) {
-    setSelectedJob(job)
+  function handleSelectJob(job) {
+    dispatch(selectJob(job.id))
     setResumeFile(null)
     setMessage('')
     setError('')
@@ -129,7 +122,7 @@ export default function StudentJobs() {
         <p className="text-muted mb-0">Search and filter jobs in the Pair 16 city set.</p>
       </div>
 
-      <ErrorAlert message={error} />
+      <ErrorAlert message={error || loadError} />
       {message && <div className="alert alert-success">{message}</div>}
 
       <div className="card shadow-sm mb-4">
@@ -227,7 +220,7 @@ export default function StudentJobs() {
                       <button
                         type="button"
                         className="btn btn-outline-primary mt-auto"
-                        onClick={() => selectJob(job)}
+                        onClick={() => handleSelectJob(job)}
                       >
                         View details
                       </button>

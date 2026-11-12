@@ -24,11 +24,20 @@ from app.schemas.student_profile import (
 )
 
 
-# group student profile endpoints under /api/students
-router = APIRouter(
+# group student-owned profile endpoints under /api/students
+student_profile_router = APIRouter(
     prefix="/api/students",
     tags=["student profiles"],
 )
+
+# group company-only student lookup endpoints under /api/students
+company_student_router = APIRouter(
+    prefix="/api/students",
+    tags=["student profiles"],
+)
+
+# preserve the legacy router export used by the monolithic application
+router = APIRouter()
 
 
 def find_student_profile(
@@ -164,7 +173,7 @@ def _search_students_from_mongo(
         return None
 
 
-@router.get(
+@student_profile_router.get(
     "/me",
     response_model=StudentProfileResponse,
 )
@@ -186,7 +195,7 @@ def get_my_student_profile(
     return find_student_profile(current_user, db)
 
 
-@router.put(
+@student_profile_router.put(
     "/me",
     response_model=StudentProfileResponse,
 )
@@ -212,7 +221,7 @@ def update_my_student_profile(
     return profile
 
 
-@router.get(
+@company_student_router.get(
     "/search",
     response_model=list[StudentSearchResult],
 )
@@ -247,7 +256,7 @@ def search_students(
     return list(db.scalars(statement).all())
 
 
-@router.get(
+@company_student_router.get(
     "/{student_id}",
     response_model=StudentProfileResponse,
 )
@@ -287,3 +296,7 @@ def get_student_profile(
             detail="students may only view their own profile",
         )
     return profile
+
+
+router.include_router(student_profile_router)
+router.include_router(company_student_router)

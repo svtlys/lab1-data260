@@ -38,16 +38,20 @@ LEGACY_EMPLOYMENT_TYPE_MAP = {
 
 
 # group student job endpoints under /api/jobs
-student_router = APIRouter(
+student_jobs_router = APIRouter(
     prefix="/api/jobs",
     tags=["jobs"],
 )
 
 # group company-owned job endpoints under /api/companies
-company_router = APIRouter(
+company_jobs_router = APIRouter(
     prefix="/api/companies/me/jobs",
     tags=["company jobs"],
 )
+
+# preserve the legacy exports used by the monolithic application
+student_router = student_jobs_router
+company_router = company_jobs_router
 
 
 def job_response(job: Job, db: Session) -> dict:
@@ -191,7 +195,7 @@ def _get_job_from_mongo(job_id: int) -> tuple[bool, dict[str, Any] | None]:
         return False, None
 
 
-@company_router.post(
+@company_jobs_router.post(
     "",
     response_model=JobResponse,
     status_code=status.HTTP_201_CREATED,
@@ -257,7 +261,7 @@ def create_job(
     return job_response(job, db)
 
 
-@company_router.get(
+@company_jobs_router.get(
     "",
     response_model=list[JobResponse],
 )
@@ -277,7 +281,7 @@ def get_my_jobs(
     return [job_response(job, db) for job in db.scalars(statement).all()]
 
 
-@student_router.get(
+@student_jobs_router.get(
     "",
     response_model=list[JobResponse],
 )
@@ -316,7 +320,7 @@ def search_jobs(
     return [job_response(job, db) for job in db.scalars(statement).all()]
 
 
-@student_router.get(
+@student_jobs_router.get(
     "/{job_id}",
     response_model=JobResponse,
 )

@@ -2,6 +2,8 @@
 main FastAPI application for the Handshake Lab 1 project.
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -15,6 +17,15 @@ from app.api.routes.events import router as events_router
 from app.api.routes.jobs import company_router as company_jobs_router
 from app.api.routes.jobs import student_router as jobs_router
 from app.api.routes.student_profile import router as student_profile_router
+from app.core.mongo import close_mongo_client
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    """release optional shared clients when the application stops."""
+
+    yield
+    close_mongo_client()
 
 
 # create the FastAPI application
@@ -22,6 +33,7 @@ app = FastAPI(
     title="Handshake Lab 1 API",
     description="Backend API for the Pair 16 Handshake prototype",
     version="0.1.0",
+    lifespan=lifespan,
 )
 
 

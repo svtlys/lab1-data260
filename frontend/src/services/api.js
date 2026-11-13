@@ -9,8 +9,20 @@ const api = axios.create({
   },
 })
 
-// Attach the stored access token (if any) to every request.
+const publicAuthPaths = [
+  '/api/auth/login',
+  '/api/auth/student/signup',
+  '/api/auth/company/signup',
+]
+
+// attach the stored access token only to protected requests
 api.interceptors.request.use((config) => {
+  const requestUrl = String(config.url || '')
+  const isPublicAuthRequest = publicAuthPaths.some(
+    (path) => requestUrl === path || requestUrl.endsWith(path),
+  )
+  if (isPublicAuthRequest) return config
+
   const token = localStorage.getItem('access_token')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`

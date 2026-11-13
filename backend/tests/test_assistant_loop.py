@@ -125,6 +125,49 @@ class AssistantLoopTests(TestCase):
         self.assertTrue(any("assistant_tool_call" in line for line in logs.output))
         self.assertTrue(any('"city": "Sunnyvale"' in line for line in logs.output))
 
+    def test_empty_event_search_answer_uses_fallback(self):
+        """return a clear answer when Ollama is blank after an empty event search."""
+
+        fake_client = FakeOllamaClient(
+            [
+                {
+                    "message": {
+                        "content": "",
+                        "tool_calls": [
+                            {
+                                "id": "event-search-call",
+                                "function": {
+                                    "name": "search_events",
+                                    "arguments": {
+                                        "start_date": "2026-11-01T00:00:00",
+                                        "end_date": "2026-11-30T23:59:59",
+                                    },
+                                },
+                            }
+                        ],
+                    }
+                },
+                {"message": {"content": ""}},
+            ]
+        )
+        loop = AssistantLoop(client=fake_client, max_iterations=3)
+
+        with patch("app.assistant.loop.search_events", return_value="[]") as search_events:
+            result = loop.run(
+                self.db,
+                self.user.id,
+                "Find an event for computer science students next month.",
+            )
+
+        self.assertEqual(
+            result.answer,
+            "No matching events were found for that time period.",
+        )
+        self.assertEqual(result.iterations, 2)
+        self.assertEqual(result.tool_call_count, 1)
+        self.assertFalse(result.reached_iteration_ceiling)
+        search_events.assert_called_once()
+
     def test_loop_stops_at_iteration_ceiling(self):
         """stop when the model keeps requesting tools indefinitely."""
 

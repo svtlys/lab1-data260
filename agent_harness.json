@@ -1,6 +1,6 @@
 {
   "harness": "pair16-agent-harness",
-  "run_at": "2026-11-14T00:11:14-08:00",
+  "run_at": "2026-11-14T07:48:37-08:00",
   "summary": {
     "total": 20,
     "passed": 20,
@@ -35,7 +35,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 1.08,
+      "latency_ms": 0.95,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -43,7 +43,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "85d0a8e8-ebc5-4dfc-b66f-574aec74367f",
+      "trace_id": "0bd7f4cf-836f-48b8-93a3-09e43bf1d5da",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 603,
@@ -77,7 +77,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 1.52,
+      "latency_ms": 1.34,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -85,7 +85,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "fe3a72fb-e453-468f-9b79-477e843c5bc0",
+      "trace_id": "1f3d0be4-3262-47bb-80b0-3ea3b66bc228",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 501,
@@ -132,7 +132,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "02d93c32-cc14-429f-8bcb-3c43476424c5",
+      "trace_id": "a235890f-9cf5-438d-bda4-e7e319fc341d",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 835,
@@ -174,7 +174,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.53,
+      "latency_ms": 0.51,
       "iterations": 3,
       "tool_call_count": 2,
       "tools_called": [
@@ -183,7 +183,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "095ea8a5-aac8-45f3-9911-6e22303a4df3",
+      "trace_id": "746e49da-a2e1-4226-bf28-f14b6aea9493",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 997,
@@ -229,7 +229,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "50ab23e8-9d37-4e50-b166-c5e73ed1a002",
+      "trace_id": "86275927-d870-41cd-8dce-952ac1639421",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 530,
@@ -263,7 +263,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.54,
+      "latency_ms": 0.56,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -271,7 +271,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "d39cc34f-0059-4f07-a019-c8527509edab",
+      "trace_id": "ce832261-7903-4a14-8944-90ede5e98c74",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 536,
@@ -305,7 +305,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.42,
+      "latency_ms": 0.33,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -313,7 +313,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "fb50cfe7-4a2e-4ca6-84ec-f1cbabca65fd",
+      "trace_id": "4125806b-869d-4a0c-906f-daf014dde245",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 649,
@@ -351,7 +351,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.63,
+      "latency_ms": 0.75,
       "iterations": 3,
       "tool_call_count": 2,
       "tools_called": [
@@ -360,7 +360,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "ae698c35-ad6c-45f2-9d5d-c3d15b41b928",
+      "trace_id": "0186a072-a8ac-4923-a080-ef1a90ad2823",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 1093,
@@ -400,7 +400,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "7c413190-4b8a-44c6-8dfa-e2b090752daa",
+      "trace_id": "607da246-03b2-4bbc-a64c-931910b4cf2a",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 224,
@@ -454,7 +454,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": "iteration_ceiling",
-      "trace_id": "1de4e553-8d74-4425-b12b-c46c04f4a71e",
+      "trace_id": "ebd8c5ec-64d1-4eb1-9b4f-9f55872f6931",
       "token_usage": {
         "model_calls": 5,
         "prompt_tokens": 2685,
@@ -501,7 +501,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "b177dde3-da79-4a7f-a25b-e0d44bd2c72b",
+      "trace_id": "b5b669b7-9e1d-4645-90cf-38800882459d",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 866,
@@ -541,7 +541,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": "ollama_error",
-      "trace_id": "872e6939-741d-4bdf-889e-5fb94b2a4325",
+      "trace_id": "0bc838e3-82e3-4744-9997-678f67c9bfad",
       "token_usage": {
         "model_calls": 0,
         "prompt_tokens": 0,
@@ -583,7 +583,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "e0180d1e-ff2f-4551-bbe8-78980b5b1459",
+      "trace_id": "54c87982-819a-4e39-85aa-627733377ba9",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 597,
@@ -629,13 +629,13 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.06,
+      "latency_ms": 0.05,
       "iterations": 1,
       "tool_call_count": 0,
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "4b39650c-7c2e-4085-9ad2-9684cb801b8d",
+      "trace_id": "fe5ce30f-c191-49f8-a237-3b3931d6a06f",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 2000,
@@ -673,13 +673,13 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.07,
+      "latency_ms": 0.06,
       "iterations": 1,
       "tool_call_count": 0,
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "dce624cf-2842-46de-9705-b49a9ca77e11",
+      "trace_id": "7e3a5111-eabe-49e1-8938-a0dbc667bf20",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 6000,
@@ -733,13 +733,13 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.15,
+      "latency_ms": 0.14,
       "iterations": 1,
       "tool_call_count": 0,
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "ab404673-d704-4ca9-9763-655bb26a35f1",
+      "trace_id": "429023db-3e62-478e-b76f-28cf70fd1f5b",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 1150,
@@ -777,7 +777,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.46,
+      "latency_ms": 0.43,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -825,7 +825,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "694cc7ba-8728-46d8-847e-54e6e289b2b9",
+      "trace_id": "5a4761c6-52a6-40dd-bea6-4bc62d23d245",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 219,
@@ -877,7 +877,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "f90046ce-d0b1-4418-91f6-5622a793221f",
+      "trace_id": "8263edab-97b8-46ee-9ee5-6972d20972da",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 398,
@@ -915,7 +915,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.3,
+      "latency_ms": 0.27,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -923,7 +923,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "a8432cd2-e3cf-4d0c-97b4-a4fde6b914e8",
+      "trace_id": "6df4e456-b51b-4ef9-afc5-80de170bcedd",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 866,

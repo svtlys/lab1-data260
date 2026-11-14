@@ -1,0 +1,382 @@
+[
+  {
+    "plan": "login",
+    "users": 100,
+    "samples": 1972,
+    "errors": 27,
+    "error_rate_percent": 1.37,
+    "avg_ms": 2500.0,
+    "p50_ms": 2336.0,
+    "p95_ms": 3310.0,
+    "p99_ms": 4247.0,
+    "max_ms": 4377.0,
+    "throughput_per_s": 32.57,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 14,
+      "200": 1945,
+      "500": 13
+    },
+    "logins": null,
+    "login_failures": 0
+  },
+  {
+    "plan": "login",
+    "users": 200,
+    "samples": 5377,
+    "errors": 3519,
+    "error_rate_percent": 65.45,
+    "avg_ms": 1723.6,
+    "p50_ms": 1999.0,
+    "p95_ms": 4071.0,
+    "p99_ms": 4701.0,
+    "max_ms": 4980.0,
+    "throughput_per_s": 87.14,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 1636,
+      "Non HTTP response code: java.net.SocketException": 116,
+      "200": 1858,
+      "500": 1767
+    },
+    "logins": null,
+    "login_failures": 0
+  },
+  {
+    "plan": "login",
+    "users": 300,
+    "samples": 5806,
+    "errors": 3937,
+    "error_rate_percent": 67.81,
+    "avg_ms": 2637.6,
+    "p50_ms": 3632.0,
+    "p95_ms": 4592.0,
+    "p99_ms": 6062.0,
+    "max_ms": 6694.0,
+    "throughput_per_s": 92.09,
+    "response_codes": {
+      "Non HTTP response code: java.net.SocketException": 119,
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 1839,
+      "500": 1979,
+      "200": 1869
+    },
+    "logins": null,
+    "login_failures": 0
+  },
+  {
+    "plan": "login",
+    "users": 400,
+    "samples": 4912,
+    "errors": 3936,
+    "error_rate_percent": 80.13,
+    "avg_ms": 7052.0,
+    "p50_ms": 3833.0,
+    "p95_ms": 60002.0,
+    "p99_ms": 60003.0,
+    "max_ms": 60046.0,
+    "throughput_per_s": 49.54,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 1737,
+      "Non HTTP response code: java.net.SocketException": 143,
+      "500": 1696,
+      "200": 976,
+      "Non HTTP response code: java.net.SocketTimeoutException": 360
+    },
+    "logins": null,
+    "login_failures": 0
+  },
+  {
+    "plan": "login",
+    "users": 500,
+    "samples": 525,
+    "errors": 525,
+    "error_rate_percent": 100.0,
+    "avg_ms": 55431.4,
+    "p50_ms": 60003.0,
+    "p95_ms": 60004.0,
+    "p99_ms": 60009.0,
+    "max_ms": 60015.0,
+    "throughput_per_s": 5.91,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 37,
+      "Non HTTP response code: java.net.SocketException": 3,
+      "Non HTTP response code: java.net.SocketTimeoutException": 485
+    },
+    "logins": null,
+    "login_failures": 0
+  },
+  {
+    "plan": "job_search",
+    "users": 100,
+    "samples": 2834,
+    "errors": 22,
+    "error_rate_percent": 0.78,
+    "avg_ms": 1558.5,
+    "p50_ms": 1667.0,
+    "p95_ms": 2106.0,
+    "p99_ms": 2338.0,
+    "max_ms": 2744.0,
+    "throughput_per_s": 47.63,
+    "response_codes": {
+      "200": 2812,
+      "500": 11,
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 11
+    },
+    "logins": 100,
+    "login_failures": 0
+  },
+  {
+    "plan": "job_search",
+    "users": 200,
+    "samples": 169,
+    "errors": 169,
+    "error_rate_percent": 100.0,
+    "avg_ms": 57157.1,
+    "p50_ms": 60002.0,
+    "p95_ms": 60003.0,
+    "p99_ms": 60003.0,
+    "max_ms": 60003.0,
+    "throughput_per_s": 1.86,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 1,
+      "Non HTTP response code: java.net.SocketException": 3,
+      "Non HTTP response code: java.net.SocketTimeoutException": 156,
+      "500": 9
+    },
+    "logins": 200,
+    "login_failures": 35
+  },
+  {
+    "plan": "job_search",
+    "users": 300,
+    "samples": 193,
+    "errors": 193,
+    "error_rate_percent": 100.0,
+    "avg_ms": 54406.5,
+    "p50_ms": 60003.0,
+    "p95_ms": 60003.0,
+    "p99_ms": 60004.0,
+    "max_ms": 60004.0,
+    "throughput_per_s": 2.14,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 14,
+      "Non HTTP response code: java.net.SocketException": 4,
+      "Non HTTP response code: java.net.SocketTimeoutException": 175
+    },
+    "logins": 300,
+    "login_failures": 89
+  },
+  {
+    "plan": "job_search",
+    "users": 400,
+    "samples": 8524,
+    "errors": 6484,
+    "error_rate_percent": 76.07,
+    "avg_ms": 2829.3,
+    "p50_ms": 1206.0,
+    "p95_ms": 3809.0,
+    "p99_ms": 60002.0,
+    "max_ms": 60004.0,
+    "throughput_per_s": 71.84,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 2904,
+      "Non HTTP response code: java.net.SocketException": 258,
+      "500": 3125,
+      "200": 2040,
+      "Non HTTP response code: java.net.SocketTimeoutException": 197
+    },
+    "logins": 400,
+    "login_failures": 139
+  },
+  {
+    "plan": "job_search",
+    "users": 500,
+    "samples": 319,
+    "errors": 319,
+    "error_rate_percent": 100.0,
+    "avg_ms": 53231.5,
+    "p50_ms": 60003.0,
+    "p95_ms": 60004.0,
+    "p99_ms": 60010.0,
+    "max_ms": 60011.0,
+    "throughput_per_s": 3.52,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 34,
+      "Non HTTP response code: java.net.SocketException": 2,
+      "Non HTTP response code: java.net.SocketTimeoutException": 283
+    },
+    "logins": 500,
+    "login_failures": 217
+  },
+  {
+    "plan": "apply",
+    "users": 100,
+    "samples": 10854,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "avg_ms": 35.8,
+    "p50_ms": 32.0,
+    "p95_ms": 77.0,
+    "p99_ms": 116.0,
+    "max_ms": 159.0,
+    "throughput_per_s": 185.58,
+    "response_codes": {
+      "409": 9947,
+      "201": 907
+    },
+    "logins": 100,
+    "login_failures": 0
+  },
+  {
+    "plan": "apply",
+    "users": 200,
+    "samples": 22347,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "avg_ms": 22.7,
+    "p50_ms": 16.0,
+    "p95_ms": 61.0,
+    "p99_ms": 116.0,
+    "max_ms": 185.0,
+    "throughput_per_s": 380.56,
+    "response_codes": {
+      "409": 20958,
+      "201": 1389
+    },
+    "logins": 200,
+    "login_failures": 0
+  },
+  {
+    "plan": "apply",
+    "users": 300,
+    "samples": 33585,
+    "errors": 0,
+    "error_rate_percent": 0.0,
+    "avg_ms": 21.2,
+    "p50_ms": 18.0,
+    "p95_ms": 49.0,
+    "p99_ms": 88.0,
+    "max_ms": 125.0,
+    "throughput_per_s": 572.28,
+    "response_codes": {
+      "201": 1522,
+      "409": 32063
+    },
+    "logins": 300,
+    "login_failures": 0
+  },
+  {
+    "plan": "apply",
+    "users": 400,
+    "samples": 31744,
+    "errors": 2,
+    "error_rate_percent": 0.01,
+    "avg_ms": 235.4,
+    "p50_ms": 241.0,
+    "p95_ms": 309.0,
+    "p99_ms": 334.0,
+    "max_ms": 389.0,
+    "throughput_per_s": 539.08,
+    "response_codes": {
+      "409": 30658,
+      "201": 1084,
+      "500": 1,
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 1
+    },
+    "logins": 400,
+    "login_failures": 0
+  },
+  {
+    "plan": "apply",
+    "users": 500,
+    "samples": 438,
+    "errors": 438,
+    "error_rate_percent": 100.0,
+    "avg_ms": 55207.8,
+    "p50_ms": 60003.0,
+    "p95_ms": 60003.0,
+    "p99_ms": 60004.0,
+    "max_ms": 60005.0,
+    "throughput_per_s": 4.84,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 35,
+      "Non HTTP response code: java.net.SocketTimeoutException": 403
+    },
+    "logins": 500,
+    "login_failures": 97
+  },
+  {
+    "plan": "assistant",
+    "users": 10,
+    "samples": 15,
+    "errors": 14,
+    "error_rate_percent": 93.33,
+    "avg_ms": 128696.4,
+    "p50_ms": 120029.0,
+    "p95_ms": 180013.0,
+    "p99_ms": 180013.0,
+    "max_ms": 180013.0,
+    "throughput_per_s": 0.04,
+    "response_codes": {
+      "Non HTTP response code: java.net.SocketTimeoutException": 2,
+      "200": 13
+    },
+    "logins": 10,
+    "login_failures": 0
+  },
+  {
+    "plan": "assistant",
+    "users": 20,
+    "samples": 20,
+    "errors": 19,
+    "error_rate_percent": 95.0,
+    "avg_ms": 128965.6,
+    "p50_ms": 120026.0,
+    "p95_ms": 180003.0,
+    "p99_ms": 180003.0,
+    "max_ms": 180003.0,
+    "throughput_per_s": 0.08,
+    "response_codes": {
+      "200": 18,
+      "Non HTTP response code: java.net.SocketTimeoutException": 2
+    },
+    "logins": 20,
+    "login_failures": 0
+  },
+  {
+    "plan": "assistant",
+    "users": 5,
+    "samples": 5,
+    "errors": 2,
+    "error_rate_percent": 40.0,
+    "avg_ms": 125979.2,
+    "p50_ms": 117700.0,
+    "p95_ms": 180013.0,
+    "p99_ms": 180013.0,
+    "max_ms": 180013.0,
+    "throughput_per_s": 0.02,
+    "response_codes": {
+      "200": 4,
+      "Non HTTP response code: java.net.SocketTimeoutException": 1
+    },
+    "logins": 5,
+    "login_failures": 0
+  },
+  {
+    "plan": "assistant",
+    "users": 50,
+    "samples": 50,
+    "errors": 50,
+    "error_rate_percent": 100.0,
+    "avg_ms": 147991.6,
+    "p50_ms": 124143.0,
+    "p95_ms": 180003.0,
+    "p99_ms": 180004.0,
+    "max_ms": 180004.0,
+    "throughput_per_s": 0.21,
+    "response_codes": {
+      "200": 34,
+      "Non HTTP response code: java.net.SocketTimeoutException": 16
+    },
+    "logins": 50,
+    "login_failures": 0
+  }
+]

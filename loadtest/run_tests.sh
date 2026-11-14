@@ -10,8 +10,15 @@
 # make it shorter while testing, for example:  DURATION=60 RAMP=15 ./run_tests.sh local
 # only some plans or user levels:              PLANS=assistant A_USERS="20 50" ./run_tests.sh local
 # also make JMeter's own HTML report:           REPORT=1 ./run_tests.sh local
+# clean backend before every run (local only):  RESTART_CMD=./restart_backend.sh ./run_tests.sh local
 set -euo pipefail
 cd "$(dirname "$0")"
+
+# keep the Mac awake for the whole run: a sleeping laptop stalls JMeter and spoils the numbers
+if [[ -z "${CAFFEINATED:-}" ]] && command -v caffeinate >/dev/null; then
+  export CAFFEINATED=1
+  exec caffeinate -dis "$0" "$@"
+fi
 
 LABEL="${1:?usage: ./run_tests.sh <smoke|local|aws> [host] [port] [protocol]}"
 HOST="${2:-127.0.0.1}"
@@ -33,6 +40,8 @@ run() {  # run <plan> <users> <duration> <ramp> <think_ms> <timeout_ms>
   local plan="$1" users="$2" duration="$3" ramp="$4" think="$5" timeout="$6"
   local out="results/$LABEL/${plan}_${users}"
   rm -rf "$out.jtl" "${out}_report"
+  # optional: start every run on a clean backend, e.g. RESTART_CMD=./restart_backend.sh
+  if [[ -n "${RESTART_CMD:-}" ]]; then "$RESTART_CMD" || { echo "restart failed"; exit 1; }; fi
   echo "=== $plan: $users users, ${duration}s (ramp ${ramp}s) -> $HOST:$PORT"
   local extra=()
   [[ "${REPORT:-0}" == "1" ]] && extra=(-e -o "${out}_report")

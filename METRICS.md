@@ -161,3 +161,46 @@ Evidence for the Kafka failure measurements:
 
 Evidence for memory consolidation is in
 `docs/evidence/lab2/memory-consolidation-final.txt`.
+
+## Lab 2 load tests (JMeter, local laptop)
+
+Local runs on the development laptop; AWS runs will be added after deployment. Setup, graphs and the full
+explanation are in `docs/loadtest_crud_analysis.md` and `docs/loadtest_assistant_analysis.md`. CRUD runs: 90 s each,
+30 s ramp-up (left out of the numbers), backend restarted before each run. Assistant runs: 300 s each, 20 s ramp-up.
+For the assistant, an HTTP 200 whose answer is only a model-timeout message counts as an error.
+
+| Scenario | Users | Samples | Error % | Failed logins | Avg ms | p50 ms | p95 ms | p99 ms | Max ms | Req/s |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Login | 100 | 1972 | 1.37 | n/a | 2500.0 | 2336 | 3310 | 4247 | 4377 | 32.57 |
+| Login | 200 | 5377 | 65.45 | n/a | 1723.6 | 1999 | 4071 | 4701 | 4980 | 87.14 |
+| Login | 300 | 5806 | 67.81 | n/a | 2637.6 | 3632 | 4592 | 6062 | 6694 | 92.09 |
+| Login | 400 | 4912 | 80.13 | n/a | 7052.0 | 3833 | 60002 | 60003 | 60046 | 49.54 |
+| Login | 500 | 525 | 100.0 | n/a | 55431.4 | 60003 | 60004 | 60009 | 60015 | 5.91 |
+| Job search | 100 | 2834 | 0.78 | 0/100 | 1558.5 | 1667 | 2106 | 2338 | 2744 | 47.63 |
+| Job search | 200 | 169 | 100.0 | 35/200 | 57157.1 | 60002 | 60003 | 60003 | 60003 | 1.86 |
+| Job search | 300 | 193 | 100.0 | 89/300 | 54406.5 | 60003 | 60003 | 60004 | 60004 | 2.14 |
+| Job search | 400 | 8524 | 76.07 | 139/400 | 2829.3 | 1206 | 3809 | 60002 | 60004 | 71.84 |
+| Job search | 500 | 319 | 100.0 | 217/500 | 53231.5 | 60003 | 60004 | 60010 | 60011 | 3.52 |
+| Application submission | 100 | 10854 | 0.0 | 0/100 | 35.8 | 32 | 77 | 116 | 159 | 185.58 |
+| Application submission | 200 | 22347 | 0.0 | 0/200 | 22.7 | 16 | 61 | 116 | 185 | 380.56 |
+| Application submission | 300 | 33585 | 0.0 | 0/300 | 21.2 | 18 | 49 | 88 | 125 | 572.28 |
+| Application submission | 400 | 31744 | 0.01 | 0/400 | 235.4 | 241 | 309 | 334 | 389 | 539.08 |
+| Application submission | 500 | 438 | 100.0 | 97/500 | 55207.8 | 60003 | 60003 | 60004 | 60005 | 4.84 |
+| AI assistant | 5 | 5 | 40.0 | 0/5 | 125979.2 | 117700 | 180013 | 180013 | 180013 | 0.02 |
+| AI assistant | 10 | 15 | 93.33 | 0/10 | 128696.4 | 120029 | 180013 | 180013 | 180013 | 0.04 |
+| AI assistant | 20 | 20 | 95.0 | 0/20 | 128965.6 | 120026 | 180003 | 180003 | 180003 | 0.08 |
+| AI assistant | 50 | 50 | 100.0 | 0/50 | 147991.6 | 124143 | 180003 | 180004 | 180004 | 0.21 |
+
+Main results:
+
+- Application submission: 0 to 0.01 % errors from 100 to 400 users (p95 at most 309 ms, 186 to 572 requests/s); fails at 500 users
+  when the sign-in burst cannot be served.
+- Job search: usable at 100 users (p50 1.7 s, 47.6 requests/s) and failing from 200 users; the endpoint runs two extra
+  database queries per matching job and has no result limit.
+- Login: 32.6 sign-ins/s at 100 users (p50 2.3 s, bcrypt bound) and 65-100 % errors from 200 users.
+- Assistant: 3 of 5 requests got a real answer at 5 users, 0 of 50 at 50 users; the local model answers one request at a
+  time (about 30 s each), so waiting time grows with the number of users.
+- Fixed during testing: assistant chats held database connections for the whole model call (logins failed with HTTP 500 at 20
+  and 50 users, 0 failed after the fix); pool enlarged from 5 + 10 to 20 + 60 connections; the default 256 open-files limit
+  caused errors from 200 users on.
+- Evidence of the runs before the fixes: `docs/loadtest_local_before.md`, `docs/loadtest_local_ulimit256.md`.

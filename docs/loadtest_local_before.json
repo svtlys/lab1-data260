@@ -1,0 +1,90 @@
+[
+  {
+    "plan": "assistant",
+    "users": 10,
+    "samples": 20,
+    "errors": 8,
+    "error_rate_percent": 40.0,
+    "avg_ms": 146701.9,
+    "p50_ms": 120048.0,
+    "p95_ms": 180007.0,
+    "p99_ms": 180013.0,
+    "max_ms": 180013.0,
+    "throughput_per_s": 0.04,
+    "response_codes": {
+      "Non HTTP response code: java.net.SocketTimeoutException": 8,
+      "200": 12
+    },
+    "real_answers": 0,
+    "logins": 10,
+    "login_failures": 0
+  },
+  {
+    "plan": "assistant",
+    "users": 20,
+    "samples": 378,
+    "errors": 357,
+    "error_rate_percent": 94.44,
+    "avg_ms": 11408.6,
+    "p50_ms": 4.0,
+    "p95_ms": 124981.0,
+    "p99_ms": 180004.0,
+    "max_ms": 180004.0,
+    "throughput_per_s": 0.81,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 16,
+      "Non HTTP response code: java.net.SocketException": 3,
+      "401": 314,
+      "500": 18,
+      "200": 21,
+      "Non HTTP response code: java.net.SocketTimeoutException": 6
+    },
+    "real_answers": 0,
+    "logins": 20,
+    "login_failures": 3
+  },
+  {
+    "plan": "assistant",
+    "users": 5,
+    "samples": 6,
+    "errors": 4,
+    "error_rate_percent": 66.67,
+    "avg_ms": 173796.3,
+    "p50_ms": 180002.0,
+    "p95_ms": 180017.0,
+    "p99_ms": 180017.0,
+    "max_ms": 180017.0,
+    "throughput_per_s": 0.02,
+    "response_codes": {
+      "Non HTTP response code: java.net.SocketTimeoutException": 4,
+      "200": 2
+    },
+    "real_answers": 0,
+    "logins": 5,
+    "login_failures": 0
+  },
+  {
+    "plan": "assistant",
+    "users": 50,
+    "samples": 2968,
+    "errors": 2949,
+    "error_rate_percent": 99.36,
+    "avg_ms": 2065.2,
+    "p50_ms": 3.0,
+    "p95_ms": 6.0,
+    "p99_ms": 30011.0,
+    "max_ms": 180029.0,
+    "throughput_per_s": 5.97,
+    "response_codes": {
+      "Non HTTP response code: org.apache.http.NoHttpResponseException": 88,
+      "Non HTTP response code: java.net.SocketException": 5,
+      "401": 2776,
+      "500": 71,
+      "200": 19,
+      "Non HTTP response code: java.net.SocketTimeoutException": 9
+    },
+    "real_answers": 0,
+    "logins": 50,
+    "login_failures": 27
+  }
+]

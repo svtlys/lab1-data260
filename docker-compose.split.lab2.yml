@@ -1,0 +1,180 @@
+x-p16-backend-environment: &p16-backend-environment
+  DB_HOST: p16-mysql
+  DB_PORT: "3306"
+  DB_USER: ${MYSQL_USER:?set MYSQL_USER}
+  DB_PASSWORD: ${MYSQL_PASSWORD:?set MYSQL_PASSWORD}
+  DB_NAME: ${MYSQL_DATABASE:-p16_handshake}
+  JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY}
+  JWT_ALGORITHM: ${JWT_ALGORITHM:-HS256}
+  JWT_EXPIRE_MINUTES: ${JWT_EXPIRE_MINUTES:-60}
+  OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+  OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:8b}
+  OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
+  MONGO_HOST: p16-mongo
+  MONGO_PORT: "27017"
+  MONGO_DATABASE: ${MONGO_DATABASE:-p16_handshake}
+  MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-p16_handshake}
+  MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME:?set MONGO_INITDB_ROOT_USERNAME}
+  MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD:?set MONGO_INITDB_ROOT_PASSWORD}
+  MONGO_READS_ENABLED: "false"
+  KAFKA_ENABLED: "false"
+  KAFKA_BOOTSTRAP_SERVERS: p16-kafka:9092
+  KAFKA_TOPIC_PREFIX: p16
+
+services:
+  p16-student-service:
+    image: p16-student-service:local
+    ports:
+      - "9161:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-company-service:
+    image: p16-company-service:local
+    ports:
+      - "9162:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-job-service:
+    image: p16-job-service:local
+    ports:
+      - "9163:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-application-service:
+    image: p16-application-service:local
+    ports:
+      - "9164:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-event-service:
+    image: p16-event-service:local
+    ports:
+      - "9165:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-assistant-service:
+    image: p16-assistant-service:local
+    ports:
+      - "9166:8000"
+    environment:
+      <<: *p16-backend-environment
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  p16-memory-worker:
+    image: p16-assistant-service:local
+    command: python -m app.workers.memory_worker
+    environment:
+      <<: *p16-backend-environment
+      MONGO_HOST: p16-mongo
+      MONGO_PORT: "27017"
+      MONGO_DATABASE: ${MONGO_DATABASE:-p16_handshake}
+      MONGO_READS_ENABLED: "true"
+      KAFKA_ENABLED: "true"
+      KAFKA_BOOTSTRAP_SERVERS: p16-kafka:9092
+      KAFKA_TOPIC_PREFIX: p16
+    healthcheck:
+      disable: true
+    networks:
+      - p16-network
+
+  p16-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:9160}
+    ports:
+      - "9167:80"
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  p16-gateway:
+    image: p16-gateway:local
+    ports:
+      - "9160:80"
+    depends_on:
+      p16-frontend:
+        condition: service_healthy
+      p16-student-service:
+        condition: service_healthy
+      p16-company-service:
+        condition: service_healthy
+      p16-job-service:
+        condition: service_healthy
+      p16-application-service:
+        condition: service_healthy
+      p16-event-service:
+        condition: service_healthy
+      p16-assistant-service:
+        condition: service_healthy
+    networks:
+      - p16-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+networks:
+  p16-network:
+    name: p16-network
+    external: true

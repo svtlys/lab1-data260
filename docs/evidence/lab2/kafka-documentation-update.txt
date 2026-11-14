@@ -1,0 +1,68 @@
+Kafka documentation update
+Date: 2026-11-14
+
+Files updated
+-------------
+- README.md — appended local Kafka commands, Pair 16 topics, worker groups,
+  offset inspection, demonstration commands/evidence paths, memory command,
+  and local-secret handling warning.
+- METRICS.md — appended only measured topic, failure-demo, and memory-demo
+  results. No latency, throughput, or availability numbers were added.
+- RUN_LOG.txt — appended dated Kafka topic verification, duplicate-event,
+  worker-restart, poison/DLQ, and memory-consolidation entries with evidence
+  paths. Existing Lab 1 entries were preserved.
+- docs/diagrams/p16-kafka-architecture.md — new Mermaid architecture diagram.
+
+Evidence used
+-------------
+- docs/evidence/lab2/kafka-failures/duplicate-event.txt
+- docs/evidence/lab2/kafka-failures/worker-restart.txt
+- docs/evidence/lab2/kafka-failures/poison-message-dlq.txt
+- docs/evidence/lab2/memory-consolidation-final.txt
+
+The optional files docs/evidence/lab2/kafka-topics-created.txt and
+docs/evidence/lab2/kafka-broker-topics-disabled.txt were absent, so neither
+was cited as evidence.
+
+Verified results appended
+-------------------------
+- Required Kafka topics: three partitions, replication factor one.
+- Duplicate demo: two publications, one activity log, one processed event,
+  zero lag.
+- Worker restart demo: one activity log and one processed event after
+  recovery; offset committed after recovery.
+- Poison demo: three retries, DLQ publication, and successful processing of
+  the following valid event.
+- Memory demo: 62 before; 38 active and 24 inactive after; 16 duplicates
+  removed; 8 contradictions resolved; zero lag.
+
+Validation
+----------
+- git diff --check: passed, exit code 0.
+- Tracked changed files: README.md, METRICS.md, RUN_LOG.txt only.
+- New untracked architecture file: docs/diagrams/p16-kafka-architecture.md.
+- No source code, database, Docker, Kafka, Kubernetes, or AWS files changed.
+- No existing documentation was overwritten or replaced; all additions were
+  appended.
+
+Screenshot status
+-----------------
+docs/evidence/lab2/kafka-documentation-update.png was not captured
+automatically. No screenshot was invented.
+
+Manual screenshot commands
+--------------------------
+From a PowerShell window at C:\Projects\lab1-data260, capture:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+Get-Content .\docs\diagrams\p16-kafka-architecture.md
+Get-Content .\README.md -Tail 90
+Get-Content .\METRICS.md -Tail 45
+Get-Content .\RUN_LOG.txt -Tail 70
+git diff --check
+
+Save the screenshot as:
+C:\Projects\lab1-data260\docs\evidence\lab2\kafka-documentation-update.png
+
+Do not display environment contents, passwords, tokens, or private data.

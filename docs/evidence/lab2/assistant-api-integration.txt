@@ -1,0 +1,49 @@
+assistant API and configuration integration
+
+source ref: origin/alyssa-lab2
+current branch baseline: vrishin-lab2
+
+files changed for this step:
+- backend/app/api/routes/assistant.py
+- backend/app/schemas/assistant.py
+- backend/app/core/config.py
+- backend/app/services/ollama_client.py
+- backend/tests/test_assistant_api.py
+
+compatible Lab 2 behavior added:
+- accepts a sanitized X-Trace-Id header and returns a generated or propagated trace_id
+- returns optional token_usage and compaction metadata without changing existing response fields
+- handles /memory commands without invoking Ollama
+- adds the assistant_context_tokens setting with a non-secret default
+- sends the configured context window to Ollama as num_ctx
+
+Lab 1 preservation checks:
+- authentication and student ownership checks remain in place
+- conversation ownership validation remains in place
+- SQL conversation/message/tool persistence remains in place
+- existing response fields and HTTP behavior remain in place
+- confirmation, prompt-injection, no-match, iteration, repair, and timeout behavior remain in the merged loop
+- assistant route, schema, config, and Ollama client compiled successfully
+- no Lab 1 assistant test deletions were found in the partner comparison
+
+validation results:
+- tests.test_assistant_api: 4 passed
+- tests.test_assistant_loop: 12 passed
+- tests.test_context tests.test_guards: 20 passed
+- tests.test_memory tests.test_memory_worker: 36 passed
+- full backend discovery: 273 passed
+- py_compile for changed assistant route/schema/config/client: passed
+- git diff --check: passed
+
+warnings observed:
+- Git reported existing LF/CRLF working-copy warnings
+- the full suite reported existing resource/deprecation warnings; no test failed
+
+scope decisions:
+- normal assistant requests pass trace_id into the already merged loop
+- /memory uses the existing Mongo-or-process-local fallback
+- Mongo conversation persistence and memory-context injection were not added because the current merged loop does not accept that parameter and expanding that contract was outside this step
+- no workers were started, no Kafka messages were published, no memory seed was run with Kafka, and no databases were modified
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

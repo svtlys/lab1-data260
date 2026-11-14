@@ -1,0 +1,10 @@
+gateway URL: http://localhost:9160
+seeded job details loaded
+application submission succeeded
+My Applications displayed the submitted application
+application status: not recorded in this evidence note
+Kafka publishing was disabled during this test
+screenshots saved:
+01-job-details.png
+02-application-success.png
+03-my-applications.png

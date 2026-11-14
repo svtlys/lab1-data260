@@ -1,0 +1,37 @@
+partner memory integration verification
+date: 2026-11-14
+
+files added from origin/alyssa-lab2:
+- backend/app/assistant/memory.py
+- backend/app/assistant/memory_seed.py
+- backend/app/workers/memory_worker.py
+- backend/scripts/seed_memory.py
+- backend/tests/test_memory.py
+- backend/tests/test_memory_worker.py
+
+pre-edit safety:
+- every destination was absent from vrishin-lab2.
+- no existing file was overwritten.
+- no assistant route, loop, tools, schema, config, requirements, Mongo, Kafka, Compose, Kubernetes, or existing worker file was modified.
+
+focused tests:
+- command: .\\.venv\\Scripts\\python.exe -B -m unittest tests.test_memory tests.test_memory_worker -v
+- result: 36 tests ran, 36 passed, 0 failures.
+
+compilation:
+- command: .\\.venv\\Scripts\\python.exe -B -m py_compile app\\assistant\\memory.py app\\assistant\\memory_seed.py app\\workers\\memory_worker.py scripts\\seed_memory.py
+- result: passed.
+
+git validation:
+- git diff --check: passed.
+- an existing line-ending warning for backend/app/api/routes/applications.py was reported; no new whitespace error was reported.
+- scoped status contains only the six intended additions.
+
+dependency and integration notes:
+- the added files import existing Mongo, envelope, producer, consumer, and idempotency modules successfully under the focused tests.
+- app.assistant.context was intentionally not added; memory.py queue_consolidation and seed_memory Kafka mode import it lazily for trace generation.
+- therefore the actual /memory consolidation Kafka path is not runtime-ready until the separately excluded context and assistant route/loop integration are reviewed.
+- no worker was started, no Kafka message was published, no database was modified, and no seed command was run.
+
+screenshot:
+- not captured by automation. Manual capture should show the PowerShell window containing the six-file list, 36-test success, compilation success, git diff --check, and scoped status.

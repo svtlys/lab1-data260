@@ -1,0 +1,49 @@
+Kafka failure demonstration 2 — worker failure and restart
+Date: 2026-11-14
+
+Setup
+-----
+Topic: p16.application.created
+Event type: application.created
+Worker: existing ApplicationWorker
+Isolated consumer group: p16-demo-app-restart-1794652751
+Demo event_id: 86df0452-a1b0-4632-bf37-e129595b0232
+Demo application_id: 922751
+
+A temporary wrapper delayed the handler before its database work. One valid
+demo envelope was published, then the delayed helper was killed during the
+delay. The same consumer group was started again with the normal worker.
+
+Observed result
+---------------
+- Producer result: published_count=1.
+- Before kill: activity_logs 0 and processed_events 0 for the demo event.
+- Before kill: application.created partition 2 had current offset unset,
+  log end 1, so the event was not committed.
+- After kill: activity_logs 0 and processed_events 0; the event remained
+  uncommitted.
+- After restart: activity_logs 1 and processed_events 1.
+- After recovery: application.created partition 2 current offset 1,
+  log end 1, lag 0. The other subscribed partitions/topics were at zero lag.
+- The observed sequence demonstrates recovery without a pre-kill database
+  write and with the offset committed only after successful processing.
+- No application-specific log lines were emitted by the temporary helpers.
+
+Safety
+------
+Only the new demo event was used. No existing application record, memory
+record, processed event, or evidence file was deleted or modified. The slow
+and recovery helpers were temporary and stopped after verification. No source
+file was changed and no topic was created.
+
+Screenshot status
+-----------------
+worker-restart.png was not captured automatically.
+To capture sanitized evidence manually:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+Get-Content .\docs\evidence\lab2\kafka-failures\worker-restart.txt
+
+Save the screenshot as:
+C:\Projects\lab1-data260\docs\evidence\lab2\kafka-failures\worker-restart.png

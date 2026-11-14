@@ -1,0 +1,41 @@
+kafka probe diagnosis 2
+date: 2026-11-14
+
+active pod:
+- p16-kafka-0: Running/CrashLoopBackOff, Ready=false, ContainersReady=false.
+- restart count: 6.
+- last termination reason: Error.
+- last exit code: 143.
+- active pod revision: p16-kafka-9f5b8df76.
+
+live pod probe definitions:
+- readiness command: /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092
+- readiness timeout: 1 second.
+- liveness command: /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092
+- liveness timeout: 1 second.
+
+StatefulSet template:
+- readiness timeout: 5 seconds.
+- liveness timeout: 5 seconds.
+- current revision: p16-kafka-5f97c46ff7.
+- update revision: p16-kafka-7698d7c7fb.
+- updated replicas: 0.
+- the active pod has not adopted the five-second probe template.
+
+latest failure:
+- kubelet reports readiness probe timeout after 1 second.
+- kubelet reports liveness probe timeout after 1 second and restarts the container.
+- failure type: timeout, not DNS, connection refusal, or a nonzero broker command result.
+
+broker configuration and logs:
+- Kafka listeners remain PLAINTEXT on 9092 and CONTROLLER on 9093.
+- advertised broker listener remains p16-kafka:9092.
+- Kafka logs show the broker reaches STARTED and Kafka Server started before probe-driven termination.
+- a fresh in-pod socket/probe check could not run because the container was not running when kubectl exec was attempted.
+- the preceding diagnostic observed listeners on 9092 and 9093 and a successful five-second broker API command; this pass does not claim a new socket result.
+
+diagnosis:
+- the five-second probe fix exists in the StatefulSet template but is not active in p16-kafka-0.
+- the stale pod continues using one-second probes, so liveness restarts it before it can remain Ready.
+- the remaining issue is StatefulSet revision adoption, not Kafka listener configuration.
+- no Secret values, passwords, tokens, or unrelated environment contents are recorded here.

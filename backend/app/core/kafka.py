@@ -38,7 +38,6 @@ def create_kafka_producer(config: Settings = settings) -> Any:
         key_serializer=lambda value: value.encode("utf-8"),
         value_serializer=lambda value: value.encode("utf-8"),
         request_timeout_ms=config.kafka_request_timeout_ms,
-        delivery_timeout_ms=config.kafka_delivery_timeout_ms,
     )
 
 

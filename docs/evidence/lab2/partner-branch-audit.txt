@@ -1,0 +1,61 @@
+partner branch compatibility audit
+date: 2026-11-14
+
+scope:
+- current branch: vrishin-lab2
+- partner ref: origin/alyssa-lab2
+- lab1 tag: a842a5322358cc9c2b96aeb2cb31d790c5d8887b
+- current branch commit: e6d684239d2f26365b60c983634d6e37245cd718
+- partner commit: 6f51258718c25b8e9832253373b8f81887637a57
+- merge-base: e6d684239d2f26365b60c983634d6e37245cd718
+- vrishin-lab2 is an ancestor of origin/alyssa-lab2.
+- divergence: current-only 0 commits, partner-only 14 commits.
+- this proves history inclusion; it does not by itself prove every file is safe to integrate.
+
+partner claims verified:
+- applications.py contains the Request import required by the route integration.
+- agent_harness.json contains 20 cases, not 18.
+- static partner inventory contains 263 backend test methods.
+- the documentation claim of 69 full backend tests passed was not independently verified and is inconsistent with the larger static inventory; no partner-branch test run was executed in this audit.
+- token tracking, 70 percent warning, 85 percent compaction, trace_id propagation, and compaction metadata exist in backend/app/assistant/context.py and loop.py.
+- /memory commands and the assistant_rules, student_memory, and conversations collections exist in the partner assistant implementation.
+- memory_worker.py exists with group p16-memory-worker and topic p16.memory.consolidate; it uses the shared consumer foundation and Mongo activity logging.
+- scripts/seed_memory.py exists and supports dry-run, direct consolidation, and an explicit Kafka mode. It was not executed.
+- JMeter plans exist for login, job_search, apply, and assistant, with plan-generation and summary scripts.
+- DB_POOL_SIZE and DB_MAX_OVERFLOW exist as db_pool_size and db_max_overflow settings and are passed to SQLAlchemy. Literal uppercase names were not present in the source search.
+
+partner changes relative to vrishin-lab2:
+- assistant route, assistant loop/tools/schema, assistant context/guards/memory, worker, seed script, assistant tests, frontend AuthContext/pages, and package-lock changes require manual review.
+- applications.py has the Request import change; merge only if the current route still lacks it.
+- no partner diff was found for docker-compose.lab2.yml, docker-compose.split.lab2.yml, gateway files, Kubernetes files, Mongo migration/core read paths, Kafka producer/consumer foundations, existing Kafka workers, or service entrypoints.
+- Redux store files are already common history; the partner branch changes Redux-wired consumers and AuthContext, not the store foundation itself.
+
+protected files and generated evidence:
+- partner diff deletes docs/LabPair-16_Lab1_Report.docx and docs/LabPair-16_Lab1_Report.pdf relative to the current branch.
+- generated transcripts, JSON/Markdown load-test and reliability results, and PNG load-test evidence are added. They require regeneration or independent verification and must not replace Lab 1 evidence.
+- AI_USE.md, METRICS.md, and RUN_LOG.txt are modified. They contain claims about test counts, live reliability runs, timing, and model behavior that were not verified in this audit; keep them out of integration until reconciled with fresh evidence.
+- loadtest/resume.pdf is a binary test upload fixture and requires separate privacy review before any integration.
+- no source-code deletions were found in the partner diff beyond the protected Lab 1 report files.
+
+compatibility assessment:
+- authentication route, bcrypt hashing, JWT validation, and ownership code were not changed by the partner diff.
+- assistant changes touch the current assistant route contract and must be manually merged with current trace, Mongo, Kafka, and confirmation behavior.
+- frontend AuthContext removes the previous loading/storage cleanup implementation in favor of Redux and therefore has logout, stale-user, and session-expiry regression risk; manually merge and test.
+- frontend assistant page assumes token and compaction fields and adds a session-only saved-items panel; keep only fields supported by the backend contract.
+- the partner package-lock changes are metadata-only peer flags in this diff; regenerate with the project package manager if needed rather than copying.
+
+memory-worker Compose decision:
+- no memory-worker service exists in either Compose file in the partner diff.
+- an additive service can be added later without changing existing service definitions by reusing a backend image with command `python -m app.workers.memory_worker`, attaching it to p16-network, and giving it only the required Mongo/Kafka settings and health/dependency policy.
+- it is not safe to add until Kafka is healthy, the worker import/tests pass, and the worker's Mongo/Kafka feature flags and topic configuration are verified. Do not enable it in the existing application services.
+
+recommendation:
+- do not integrate the partner branch wholesale.
+- preserve the lab1 tag and current reports/evidence.
+- selectively review memory/context/guard/worker/test files first.
+- manually merge assistant route/loop/schema, AuthContext, assistant page, and other overlapping frontend files.
+- exclude deleted Lab 1 reports, generated result files, transcripts, screenshots, and unverified documentation claims.
+- the memory worker is conditionally safe as a later additive Compose service, but not ready for addition based on this audit alone.
+
+screenshot:
+- not captured by automation. Manual capture should show a PowerShell window containing the branch commit commands, merge-base/ancestry result, diff --stat/name-status, protected-file deletion check, and sanitized targeted grep output for memory_worker.py, seed_memory.py, agent_harness.json, JMeter plans, trace_id, and token/compaction support.

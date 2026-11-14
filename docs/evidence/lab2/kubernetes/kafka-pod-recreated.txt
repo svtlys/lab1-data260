@@ -1,0 +1,37 @@
+kafka pod recreation verification
+date: 2026-11-14
+
+before deletion:
+- p16-kafka-data: Bound, 5Gi, RWO.
+- p16-mongo-data: Bound.
+- p16-mysql-data: Bound.
+
+recreation:
+- deleted only pod p16-kafka-0 with --wait=true.
+- StatefulSet rollout status timed out after 180 seconds.
+
+new kafka pod:
+- name: p16-kafka-0
+- phase: Running
+- ready: false
+- restarts: 2
+- revision: p16-kafka-9f5b8df76
+- the new pod uses the desired StatefulSet revision.
+
+sanitized kafka log result:
+- Kafka reached KRaft startup but repeatedly reported UnknownHostException for p16-kafka while connecting to p16-kafka:9093.
+
+infrastructure:
+- p16-mysql-0: Running, Ready=true, restarts=0.
+- p16-mongo-0: Running, Ready=true, restarts=1.
+- p16-kafka-data: Bound.
+- p16-mongo-data: Bound.
+- p16-mysql-data: Bound.
+
+workload scope:
+- no application pods or deployments were created.
+- no Secret values, passwords, tokens, or environment contents are recorded here.
+
+screenshot:
+- not captured by automation because Kafka did not become Ready.
+- manual capture should be taken if required, showing the PVC check, rollout result, pod status, infrastructure status, and PVC status.

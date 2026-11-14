@@ -1,0 +1,31 @@
+kafka probe fix verification
+date: 2026-11-14
+
+manifest change:
+- Kafka readinessProbe.timeoutSeconds set to 5.
+- Kafka livenessProbe.timeoutSeconds set to 5.
+- no listener, Service, volume, MySQL, MongoDB, application, or Secret settings were changed.
+
+validation and apply:
+- git diff --check completed with the existing applications.py line-ending warning.
+- infrastructure manifest applied successfully.
+- Kafka rollout status timed out after 180 seconds.
+
+final status:
+- p16-kafka-0: Running, Ready=false, restarts=6, revision=p16-kafka-9f5b8df76.
+- Kafka logs show the broker reaches STARTED and Kafka Server started.
+- p16-mysql-0: Running, Ready=true, restarts=0.
+- p16-mongo-0: Running, Ready=true, restarts=3.
+- p16-kafka-data: Bound.
+- p16-mongo-data: Bound.
+- p16-mysql-data: Bound.
+- no application pods or deployments were created.
+
+result:
+- the requested timeout values were applied to the manifest, but Kafka still did not become Ready during this verification window.
+- no additional pod deletion or repair was performed.
+- no Secret values, passwords, tokens, or environment contents are recorded here.
+
+screenshot:
+- not captured by automation because Kafka did not become Ready.
+- manual capture should be taken only after Kafka is Ready, showing the probe diff, rollout status, pod status, infrastructure status, and PVC status.

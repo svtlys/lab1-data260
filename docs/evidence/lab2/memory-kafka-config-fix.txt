@@ -1,0 +1,44 @@
+Kafka producer configuration fix
+
+files changed:
+- backend/app/core/kafka.py
+- backend/tests/test_kafka_producer.py
+
+diagnosis:
+- installed package: kafka-python-ng 2.2.3
+- module name: kafka
+- unsupported setting: delivery_timeout_ms
+
+fix:
+- removed only delivery_timeout_ms from KafkaProducer construction
+- preserved bootstrap server parsing
+- preserved request_timeout_ms
+- preserved envelope validation, topic prefixing, retries, DLQ, idempotency, and publish error sanitization
+
+validation:
+- tests.test_kafka_producer: 6 passed
+- tests.test_memory tests.test_memory_worker: 36 passed
+- full backend discovery: 274 passed
+- py_compile for app/core/kafka.py and app/messaging/producer.py: passed
+- git diff --check: passed; existing LF/CRLF warnings were reported
+
+container verification:
+- p16-assistant-service:local rebuilt successfully
+- only p16-memory-worker was force-recreated
+- worker status: running
+- worker exit code: 0
+- worker restarting: false
+- worker error: empty
+- worker logs: no startup/import/configuration error
+- p16-mongo: running and healthy
+- p16-kafka: running and healthy
+
+data safety:
+- python -m scripts.seed_memory --kafka was not rerun
+- the 62 seeded student-memory entries were not deleted or modified
+- no Kafka messages were published by this fix
+- no database migration or reset ran
+- no application services were restarted
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

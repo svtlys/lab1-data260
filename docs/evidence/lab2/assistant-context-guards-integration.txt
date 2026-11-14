@@ -1,0 +1,34 @@
+assistant context and guards integration
+
+source ref: origin/alyssa-lab2
+current branch baseline: vrishin-lab2
+
+pre-edit destination check:
+- backend/app/assistant/context.py: absent
+- backend/app/assistant/guards.py: absent
+- backend/tests/test_context.py: absent
+- backend/tests/test_guards.py: absent
+
+files added:
+- backend/app/assistant/context.py
+- backend/app/assistant/guards.py
+- backend/tests/test_context.py
+- backend/tests/test_guards.py
+
+validation commands and results:
+- .\\.venv\\Scripts\\python.exe -B -m unittest tests.test_context tests.test_guards -v: 20 tests passed
+- .\\.venv\\Scripts\\python.exe -B -m unittest tests.test_memory tests.test_memory_worker -v: 36 tests passed
+- .\\.venv\\Scripts\\python.exe -B -m py_compile app\\assistant\\context.py app\\assistant\\guards.py: passed
+- git diff --check: passed; git emitted its existing LF/CRLF working-copy warning for backend/app/api/routes/applications.py
+
+preservation checks:
+- existing assistant loop, tools, route, schemas, core config, and assistant test files were not modified
+- no Lab 1 assistant test deletions were found in the partner-branch comparison
+- no workers were started, no Kafka messages were published, no memory seed was run with Kafka, and no databases were modified
+
+implementation scope:
+- only the four approved context/guard source and test files were added
+- assistant loop/route/schema/config wiring remains a later integration step
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

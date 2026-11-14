@@ -34,6 +34,7 @@ from app.services.ollama_client import OllamaClient, OllamaError
 
 DEFAULT_MAX_ITERATIONS = 5
 DEFAULT_MAX_REPAIR_ATTEMPTS = 1
+DEFAULT_CONTEXT_BUDGET = 8192
 EMPTY_EVENT_SEARCH_FALLBACK = "No matching events were found for that time period."
 logger = logging.getLogger(__name__)
 UNTRUSTED_DATA_TOOLS = frozenset(
@@ -201,6 +202,8 @@ class AssistantLoop:
         self.client = client or OllamaClient()
         self.max_iterations = max_iterations
         self.max_repair_attempts = max_repair_attempts
+        if context_budget is not None and context_budget < 1:
+            raise ValueError("context_budget must be at least 1")
         # size of the model's context window in tokens
         self.context_budget = context_budget or settings.assistant_context_tokens
 

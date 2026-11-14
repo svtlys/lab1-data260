@@ -1,0 +1,98 @@
+assistant overlapping integration audit
+date: 2026-11-14
+
+refs:
+- current branch: vrishin-lab2
+- partner ref: origin/alyssa-lab2
+- audit is based on branch refs; no checkout or integration was performed.
+
+changed-file summary:
+- modified: backend/app/api/routes/assistant.py, backend/app/assistant/loop.py, backend/app/assistant/tools.py, backend/app/core/config.py, backend/app/schemas/assistant.py, backend/tests/test_assistant_api.py, backend/tests/test_live_reliability_run.py.
+- added: backend/app/assistant/context.py, backend/app/assistant/guards.py, backend/tests/test_context.py, backend/tests/test_event_eligibility_search.py, backend/tests/test_guards.py, backend/tests/test_loop_db_release.py, backend/tests/test_memory.py, backend/tests/test_memory_worker.py.
+- no deleted assistant tests were found.
+
+backend/app/assistant/context.py
+- current Lab 1: file absent; no token, compaction, or trace helper.
+- partner Lab 2: additive TokenTracker, safe trace-id cleaning/UUID mapping, 70 percent warning, and message compaction.
+- overlapping functions: new helpers only; it is consumed by loop.py and assistant.py.
+- preservation: does not alter the five-iteration or repair limits; compaction works on a copy, preserving stored history.
+- merge plan: add as-is after reviewing naming and budget settings; then wire loop and route.
+
+backend/app/assistant/guards.py
+- current Lab 1: file absent; no output guard or search-argument normalizer.
+- partner Lab 2: adds normalize_job_search_args and protect_instructions.
+- preservation: strengthens prompt-injection/output protection; it does not replace the untrusted database-content delimiter.
+- merge plan: add as-is, then call from loop/tools only after focused tests pass.
+
+backend/app/assistant/loop.py
+- current Lab 1: AssistantLoop with DEFAULT_MAX_ITERATIONS=5, DEFAULT_MAX_REPAIR_ATTEMPTS=1, tool loop, confirmation handling, no-match fallback, untrusted-content delimiters, and tool diagnostics.
+- partner Lab 2: preserves those constants and flow; adds trace_id, TokenTracker, compaction, memory_context, guard output filtering, and database rollback before slow model calls.
+- overlapping functions: AssistantRunResult, AssistantLoop.__init__, _complete, _tool_functions, and run.
+- preservation: five-iteration ceiling preserved; one bounded repair attempt preserved; conversation/tool logging preserved; confirmation-gated save preserved; no-match fallback string preserved; untrusted delimiters preserved; authorization remains supplied through the student ID and existing tools; Ollama timeout behavior is unchanged.
+- risk: rollback-before-model-call changes transaction timing and needs the existing persistence tests plus full assistant regression tests.
+- merge plan: manually merge imports and AssistantRunResult fields first, then run-loop changes, then memory_context and guard calls; retain current confirmation and fallback code verbatim unless tests require otherwise.
+
+backend/app/assistant/tools.py
+- current Lab 1: job/event tools, save actions, ownership checks, and response shaping.
+- partner Lab 2: adds search argument normalization, case-insensitive employment type filtering, and event eligibility fields/major filtering.
+- overlapping functions: search_jobs, search_events, and event response mapping.
+- preservation: student ownership checks and save behavior remain; database content remains untrusted when wrapped by loop.py.
+- risk: eligibility filtering and normalized model arguments need focused parity tests.
+- merge plan: manually apply only the normalized search and eligibility hunks; retain current ownership and save code.
+
+backend/app/api/routes/assistant.py
+- current Lab 1: require_student authorization, MySQL conversation/message/tool persistence, confirmation flag forwarding, and existing response shape.
+- partner Lab 2: preserves require_student and MySQL persistence, commits a new conversation before model work, accepts X-Trace-Id, handles /memory directly, injects memory context, saves optional Mongo conversation data, and returns trace/token/compaction metadata.
+- overlapping functions: load_history, chat_with_assistant, message/tool persistence, and AssistantChatResponse construction.
+- preservation: authorization and conversation ownership checks remain; confirmation flag remains; tool records remain; existing API fields remain; Mongo failures are caught so chat is not broken.
+- risk: route depends on context.py, memory.py, and new schema fields; current frontend/backend contract must be merged together. Calling get_mongo_database separately from the memory fallback requires review.
+- merge plan: first merge schema-compatible optional fields, then trace extraction, then /memory branch, then memory context, then optional Mongo persistence; run route tests after each stage.
+
+backend/app/schemas/assistant.py
+- current Lab 1: response ends with created_at and existing run/tool fields.
+- partner Lab 2: adds optional trace_id, token_usage, and compaction fields.
+- preservation: fields are optional, so existing consumers remain compatible.
+- merge plan: add optional fields before route integration.
+
+backend/app/core/config.py
+- current Lab 1: existing DB, JWT, Ollama, Mongo, and Kafka settings.
+- partner Lab 2: adds db_pool_size, db_max_overflow, db_pool_timeout_seconds, and assistant_context_tokens.
+- preservation: defaults do not enable Mongo reads or Kafka; existing Ollama timeout remains unchanged.
+- merge plan: manually add the four settings and separately review database.py/ollama_client.py consumers.
+
+related tests:
+- test_assistant_api.py: current 2 methods, partner 4; partner adds /memory and memory-context tests.
+- test_assistant_loop.py: current 9, partner 9.
+- test_assistant_tools.py: current 5, partner 5.
+- test_confirmation.py: current 3, partner 3.
+- test_prompt_injection.py: current 2, partner 2.
+- test_required_assistant.py: current 5, partner 5.
+- added test_context.py, test_guards.py, test_loop_db_release.py, test_event_eligibility_search.py, test_memory.py, and test_memory_worker.py.
+- no assistant test deletions were detected.
+- generated metrics and transcripts were not treated as test evidence.
+
+behavior matrix:
+- five-iteration ceiling: preserved by unchanged default constant and loop bound.
+- one bounded repair attempt: preserved by unchanged default and repair counter.
+- conversation/message/tool persistence: preserved; partner commits new conversations earlier and adds optional Mongo persistence.
+- confirmation-gated saves: preserved through confirm_action and confirmed_save.
+- no-match fallback: preserved with the same fallback string and empty-event detection.
+- prompt-injection defense: strengthened by protect_instructions; original prompt rules and untrusted delimiters remain.
+- untrusted database-content delimiters: preserved in _complete.
+- authorization/ownership: preserved through require_student and existing student_id ownership filters.
+- timeout behavior: unchanged; partner adds num_ctx but does not change Ollama timeout settings.
+
+integration flow:
+- context.py and guards.py first.
+- manually merge loop.py while preserving limits, confirmation, persistence, fallback, and delimiters.
+- manually merge tools.py for normalized search and eligibility only.
+- add optional response fields in schemas/assistant.py.
+- manually merge config.py and its consumers.
+- manually merge assistant.py route and run focused assistant tests.
+- integrate memory route wiring only after the above passes.
+
+missing or risky points:
+- current branch lacks context.py and guards.py; they are partner-only dependencies.
+- current branch lacks the partner route/schema/config changes, so the newly integrated memory files are not yet reachable through /memory.
+- do not trust partner metrics/transcripts as proof of behavior.
+- no production worker, Kafka publish, database modification, or live assistant test was run in this audit.

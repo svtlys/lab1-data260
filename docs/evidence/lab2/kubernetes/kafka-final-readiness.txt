@@ -1,0 +1,40 @@
+kafka final readiness precondition check
+date: 2026-11-14
+
+precondition results:
+- StatefulSet update strategy: RollingUpdate.
+- requested PVC p16-kafka-data-p16-kafka-0: not found.
+- actual Kafka PVC p16-kafka-data: Bound.
+- MongoDB PVC p16-mongo-data: Bound.
+- MySQL PVC p16-mysql-data: Bound.
+
+action taken:
+- no pod was deleted because the requested PVC precondition failed.
+- no rollout was started.
+- no resources were modified.
+
+result:
+- final pod revision, active probe values, Kafka readiness, restart count, and rollout status were not rechecked because the requested storage precondition did not match the actual manifest.
+- no Secret values, passwords, tokens, or environment contents are recorded here.
+
+screenshot:
+- not captured by automation because the approved recreation sequence was blocked by the missing PVC name.
+- manual capture should show the failed requested PVC lookup, RollingUpdate strategy, and actual Bound PVC list.
+
+successful retry:
+- verified p16-kafka-data: Bound.
+- deleted only p16-kafka-0; StatefulSet and PVC were preserved.
+- rollout status: partitioned roll out complete: 1 new pod updated.
+- p16-kafka-0 revision: p16-kafka-7698d7c7fb.
+- p16-kafka-0: Running, Ready=true, restarts=0.
+- active readiness timeout: 5 seconds.
+- active liveness timeout: 5 seconds.
+- Kafka logs report the broker reached STARTED and Kafka Server started.
+- p16-mysql-0: Running, Ready=true, restarts=0.
+- p16-mongo-0: Running, Ready=true, restarts=3.
+- p16-kafka-data, p16-mongo-data, and p16-mysql-data: Bound.
+- no application pods or deployments were created.
+- no Secret values, passwords, tokens, or environment contents are recorded here.
+
+final screenshot:
+- not captured by automation; manual capture may show the PVC check, rollout success, pod revision, five-second probes, infrastructure readiness, and PVC status.

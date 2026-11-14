@@ -1,0 +1,45 @@
+kafka service discovery fix verification
+date: 2026-11-14
+
+manifest change:
+- p16-kafka headless Service retains broker port 9092.
+- p16-kafka headless Service adds controller port 9093 targeting 9093.
+- publishNotReadyAddresses is true.
+
+validation and apply:
+- git diff --check: completed with the existing applications.py line-ending warning.
+- kubectl apply -f k8s/20-infrastructure.yaml: succeeded.
+- live Service verification: ports 9092/TCP and 9093/TCP present; publishNotReadyAddresses=true.
+- only p16-kafka-0 was deleted for recreation.
+- StatefulSet rollout status: timed out after 180 seconds.
+
+pod status:
+- p16-kafka-0: Running, Ready=false, restarts=1, revision=p16-kafka-9f5b8df76.
+- current log tail reached Kafka KRaft launch without the previous UnknownHostException, but the pod did not become Ready during the rollout window.
+
+infrastructure status:
+- p16-mysql-0: Running, Ready=true, restarts=0.
+- p16-mongo-0: Running, Ready=true, restarts=2.
+- p16-kafka-data: Bound.
+- p16-mongo-data: Bound.
+- p16-mysql-data: Bound.
+
+workload scope:
+- no application pods or deployments were created.
+- no Secret values, passwords, tokens, or environment contents are recorded here.
+
+screenshot:
+- not captured by automation because Kafka did not become Ready.
+- manual capture should be taken only after Kafka is Ready, showing Service ports, rollout status, pod status, infrastructure status, and PVC status.
+
+repeat verification:
+- the requested Service block was already present; no duplicate file edit was needed.
+- git diff --check completed with the same existing applications.py line-ending warning.
+- infrastructure manifest re-apply succeeded; p16-kafka Service was unchanged.
+- live p16-kafka Service still exposes 9092/TCP and 9093/TCP with publishNotReadyAddresses=true.
+- only p16-kafka-0 was deleted again for recreation.
+- rollout status again timed out after 180 seconds.
+- p16-kafka-0: Running, Ready=false, restarts=1, revision=p16-kafka-9f5b8df76.
+- current log tail shows KRaft launch without the prior DNS error, but readiness did not complete.
+- p16-mysql-0 and p16-mongo-0 remain Ready; all three PVCs remain Bound.
+- no application pods or deployments were created.

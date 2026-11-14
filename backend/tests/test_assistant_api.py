@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.api.routes import assistant as assistant_route
+from app.assistant import memory as memory_module
 from app.assistant.loop import AssistantRunResult
 from app.core.database import Base
 from app.models.assistant_conversation import AssistantConversation, AssistantMessage
@@ -26,7 +27,15 @@ class FakeAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history, confirmed_save=False):
+    def run(
+        self,
+        db,
+        student_id,
+        user_message,
+        history,
+        confirmed_save=False,
+        trace_id=None,
+    ):
         # return one assistant turn with one logged tool call
         return AssistantRunResult(
             answer="I found a useful opportunity.",
@@ -54,7 +63,15 @@ class RollbackAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history, confirmed_save=False):
+    def run(
+        self,
+        db,
+        student_id,
+        user_message,
+        history,
+        confirmed_save=False,
+        trace_id=None,
+    ):
         # simulate the rollback used when a tool fails
         db.rollback()
         return AssistantRunResult(
@@ -147,6 +164,74 @@ class AssistantApiTests(TestCase):
         self.assertEqual(len(messages), 2)
         self.assertEqual(len(tool_logs), 1)
         self.assertEqual(tool_logs[0].tool_name, "search_jobs")
+
+    def test_trace_header_is_returned_and_memory_command_skips_model(self):
+        class ExplodingLoop:
+            def __init__(self):
+                raise AssertionError("the model must not run for /memory")
+
+        memory_module._fallback_database = None
+        request = AssistantChatRequest(message="/memory add note: likes data jobs")
+        with patch.object(assistant_route, "AssistantLoop", ExplodingLoop):
+            response = assistant_route.chat_with_assistant(
+                request=request,
+                current_user=self.user,
+                db=self.db,
+                x_trace_id="api-trace-test",
+            )
+
+        self.assertIn("Saved to memory", response.answer)
+        self.assertEqual(response.trace_id, "api-trace-test")
+        self.assertIsNone(response.token_usage)
+        self.assertIsNone(response.compaction)
+        stored = list(
+            self.db.scalars(
+                select(AssistantMessage).where(
+                    AssistantMessage.conversation_id == response.conversation_id,
+                )
+            ).all()
+        )
+        self.assertEqual([message.role for message in stored], ["user", "assistant"])
+
+    def test_normal_chat_forwards_trace_id_and_optional_metadata(self):
+        seen = {}
+
+        class CapturingLoop(FakeAssistantLoop):
+            def run(
+                self,
+                db,
+                student_id,
+                user_message,
+                history,
+                confirmed_save=False,
+                trace_id=None,
+            ):
+                seen["trace_id"] = trace_id
+                result = super().run(
+                    db,
+                    student_id,
+                    user_message,
+                    history,
+                    confirmed_save,
+                    trace_id,
+                )
+                result.trace_id = trace_id or "generated-by-loop"
+                result.token_usage = {"warning": True, "total_tokens": 90}
+                result.compaction = {"count": 1}
+                return result
+
+        with patch.object(assistant_route, "AssistantLoop", CapturingLoop):
+            response = assistant_route.chat_with_assistant(
+                request=AssistantChatRequest(message="find me a job"),
+                current_user=self.user,
+                db=self.db,
+                x_trace_id="api-trace-forwarded",
+            )
+
+        self.assertEqual(seen["trace_id"], "api-trace-forwarded")
+        self.assertEqual(response.trace_id, "api-trace-forwarded")
+        self.assertEqual(response.token_usage["warning"], True)
+        self.assertEqual(response.compaction["count"], 1)
 
     def test_new_conversation_survives_assistant_rollback(self):
         """keep a new conversation when a later assistant tool rolls back."""

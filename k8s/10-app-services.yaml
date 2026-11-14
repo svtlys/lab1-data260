@@ -1,0 +1,261 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-gateway
+  namespace: p16
+  labels: {app: p16-gateway}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-gateway}}
+  template:
+    metadata: {labels: {app: p16-gateway}}
+    spec:
+      containers:
+        - name: p16-gateway
+          image: p16-gateway:local
+          imagePullPolicy: IfNotPresent
+          ports: [{name: http, containerPort: 80}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 5, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 15, periodSeconds: 20}
+          resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: 250m, memory: 256Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-gateway
+  namespace: p16
+  labels: {app: p16-gateway}
+spec:
+  type: ClusterIP
+  selector: {app: p16-gateway}
+  ports: [{name: http, port: 80, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-frontend
+  namespace: p16
+  labels: {app: p16-frontend}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-frontend}}
+  template:
+    metadata: {labels: {app: p16-frontend}}
+    spec:
+      containers:
+        - name: p16-frontend
+          image: p16-frontend:local
+          imagePullPolicy: IfNotPresent
+          ports: [{name: http, containerPort: 80}]
+          readinessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 5, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /, port: http}, initialDelaySeconds: 15, periodSeconds: 20}
+          resources: {requests: {cpu: 50m, memory: 64Mi}, limits: {cpu: 250m, memory: 256Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-frontend
+  namespace: p16
+  labels: {app: p16-frontend}
+spec:
+  type: ClusterIP
+  selector: {app: p16-frontend}
+  ports: [{name: http, port: 80, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-student-service
+  namespace: p16
+  labels: {app: p16-student-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-student-service}}
+  template:
+    metadata: {labels: {app: p16-student-service}}
+    spec:
+      containers:
+        - name: p16-student-service
+          image: p16-student-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-student-service
+  namespace: p16
+  labels: {app: p16-student-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-student-service}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-company-service
+  namespace: p16
+  labels: {app: p16-company-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-company-service}}
+  template:
+    metadata: {labels: {app: p16-company-service}}
+    spec:
+      containers:
+        - name: p16-company-service
+          image: p16-company-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-company-service
+  namespace: p16
+  labels: {app: p16-company-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-company-service}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-job-service
+  namespace: p16
+  labels: {app: p16-job-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-job-service}}
+  template:
+    metadata: {labels: {app: p16-job-service}}
+    spec:
+      containers:
+        - name: p16-job-service
+          image: p16-job-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-job-service
+  namespace: p16
+  labels: {app: p16-job-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-job-service}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-application-service
+  namespace: p16
+  labels: {app: p16-application-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-application-service}}
+  template:
+    metadata: {labels: {app: p16-application-service}}
+    spec:
+      containers:
+        - name: p16-application-service
+          image: p16-application-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-application-service
+  namespace: p16
+  labels: {app: p16-application-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-application-service}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-event-service
+  namespace: p16
+  labels: {app: p16-event-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-event-service}}
+  template:
+    metadata: {labels: {app: p16-event-service}}
+    spec:
+      containers:
+        - name: p16-event-service
+          image: p16-event-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-event-service
+  namespace: p16
+  labels: {app: p16-event-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-event-service}
+  ports: [{name: http, port: 8000, targetPort: http}]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: p16-assistant-service
+  namespace: p16
+  labels: {app: p16-assistant-service}
+spec:
+  replicas: 1
+  selector: {matchLabels: {app: p16-assistant-service}}
+  template:
+    metadata: {labels: {app: p16-assistant-service}}
+    spec:
+      containers:
+        - name: p16-assistant-service
+          image: p16-assistant-service:local
+          imagePullPolicy: IfNotPresent
+          envFrom: [{configMapRef: {name: p16-config}}, {secretRef: {name: p16-secrets}}]
+          ports: [{name: http, containerPort: 8000}]
+          readinessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 10, periodSeconds: 10}
+          livenessProbe: {httpGet: {path: /health, port: http}, initialDelaySeconds: 20, periodSeconds: 20}
+          resources: {requests: {cpu: 100m, memory: 128Mi}, limits: {cpu: 500m, memory: 512Mi}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: p16-assistant-service
+  namespace: p16
+  labels: {app: p16-assistant-service}
+spec:
+  type: ClusterIP
+  selector: {app: p16-assistant-service}
+  ports: [{name: http, port: 8000, targetPort: http}]

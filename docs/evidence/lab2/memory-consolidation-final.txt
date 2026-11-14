@@ -1,0 +1,53 @@
+assistant-memory Kafka consolidation demonstration
+
+preconditions:
+- p16-mongo: running and healthy
+- p16-kafka: running and healthy
+- p16-memory-worker: running with exit code 0
+- p16.memory.consolidate: exists with 3 partitions and replication factor 1
+
+command executed in a temporary internal-network helper:
+- python -m scripts.seed_memory --kafka
+- scripts directory mounted read-only
+- no credentials or environment values printed
+
+seed results:
+- target student id: 1
+- memory count before: 62
+- seed entries loaded: 62
+- consolidation mode: queued
+- event published: yes, to p16.memory.consolidate
+
+worker results:
+- memory worker remained running with exit code 0 and no restart
+- processed-events record count: 1
+- memory-consolidation activity-log count: 1
+- consumer group: p16-memory-worker
+- partition 0 advanced from offset 0 to 1
+- consumer lag after processing: 0
+
+consolidation results:
+- before: 62
+- after: 38
+- duplicates removed: 16
+- contradictions resolved: 8
+- post-processing active memory count: 38
+- post-processing inactive memory count: 24
+- model/worker error: none
+
+Kafka offset evidence:
+- p16.memory.consolidate end offsets: [0, 0, 1]
+- p16.application.created: [0, 0, 0]
+- p16.application.updated: [0, 0, 0]
+- p16.application.status_changed: [0, 0, 0]
+- p16.event.registration_created: [0, 0, 0]
+- p16.job.created: [0, 0, 0]
+- p16.dlq: [0, 0, 0]
+
+scope checks:
+- no reset, delete, truncate, drop, migration, or seed rerun was performed
+- no application services were restarted
+- no AWS resources were created
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

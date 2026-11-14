@@ -1,0 +1,31 @@
+Kafka pod: p16-kafka-0
+image: apache/kafka:3.9.0
+status: CrashLoopBackOff
+ready: false
+restart count: 5
+
+first meaningful startup error:
+java.lang.IllegalArgumentException: No security protocol defined for listener PLAINTEXT
+
+diagnosis:
+the Kafka KRaft configuration was parsed incorrectly from flow-style YAML. Comma-separated KRaft settings were not quoted, so the container received incomplete listener and process-role configuration. This is a manifest configuration issue.
+
+not the primary issue:
+image pull succeeded
+PVC p16-kafka-data is Bound
+Kafka container started before exiting
+readiness probe did not cause the process crash
+no storage or permission error was reported
+
+other infrastructure status:
+p16-mysql: Running and Ready
+p16-mongo: Running but not Ready; a readiness probe timed out
+p16-kafka: CrashLoopBackOff and not Ready
+p16-mysql-data: Bound
+p16-mongo-data: Bound
+p16-kafka-data: Bound
+
+smallest required file change, not applied:
+quote the comma-containing Kafka values in k8s/20-infrastructure.yaml for the process roles, listeners, and listener security protocol map.
+
+no pods were restarted or deleted, and no application manifests were applied.

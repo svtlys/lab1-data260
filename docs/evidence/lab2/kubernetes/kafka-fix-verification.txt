@@ -1,0 +1,29 @@
+kafka yaml fix verification
+date: 2026-11-14
+
+manifest change:
+- kafka comma-separated environment values in k8s/20-infrastructure.yaml are quoted as complete yaml strings for process roles, listeners, advertised listeners, and the listener security protocol map.
+
+validation:
+- git diff --check: passed; an existing line-ending warning was reported for backend/app/api/routes/applications.py.
+- kubectl apply -f k8s/20-infrastructure.yaml: completed; mysql and mongo were unchanged, kafka statefulset was configured.
+- kubectl rollout status statefulset/p16-kafka -n p16 --timeout=180s: timed out.
+
+observed infrastructure status:
+- p16-kafka-0: Running, Ready=false, CrashLoopBackOff, restarts=7.
+- p16-mysql-0: Running, Ready=true, restarts=0.
+- p16-mongo-0: Running, Ready=true, restarts=1.
+- p16-mysql-data: Bound.
+- p16-mongo-data: Bound.
+- p16-kafka-data: Bound.
+
+sanitized kafka log result:
+- the pod still reported: No security protocol defined for listener PLAINTEXT.
+- the live StatefulSet contains the corrected complete values, but the running pod still has the previous pod-template revision and truncated values.
+
+workload scope:
+- no application deployments or application pods were created.
+- no secret values, passwords, tokens, or environment contents are recorded here.
+
+screenshot:
+- not captured by automation; manual capture is required after the Kafka pod is rolled to the corrected template.

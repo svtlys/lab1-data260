@@ -1,0 +1,39 @@
+memory worker healthcheck fix
+
+file changed:
+- docker-compose.split.lab2.yml
+
+configuration change:
+- p16-memory-worker healthcheck: disabled
+- no HTTP healthcheck was added
+
+validation:
+- git diff --check: passed
+- docker compose config: passed with exit code 0
+- only p16-memory-worker was force-recreated
+
+worker verification:
+- container: lab1-data260-p16-memory-worker-1
+- image: p16-assistant-service:local
+- command: python -m app.workers.memory_worker
+- status: running
+- running: true
+- restarting: false
+- exit code: 0
+- error: empty
+- OOM killed: false
+- logs: no startup/import/configuration error; no log output during the check
+- inherited HTTP healthcheck is no longer active
+
+external infrastructure:
+- p16-mongo: running and healthy
+- p16-kafka: running and healthy
+
+scope checks:
+- no seed command ran
+- no databases, Kafka topics, or messages were modified
+- no application service was restarted
+- no AWS resources were created
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://127.0.0.1:11434"
     ollama_model: str = "qwen3:8b"
     ollama_timeout_seconds: float = 120.0
+    assistant_context_tokens: int = 8192
 
     mongo_host: str = "127.0.0.1"
     mongo_port: int = 27017

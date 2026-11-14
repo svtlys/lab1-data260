@@ -1,0 +1,39 @@
+memory worker split Compose configuration
+
+file changed:
+- docker-compose.split.lab2.yml
+
+added service:
+- service: p16-memory-worker
+- image: p16-assistant-service:local
+- command: python -m app.workers.memory_worker
+- network: p16-network
+- host ports: none
+- depends_on: none
+- healthcheck: none
+
+non-secret runtime settings:
+- Mongo host: p16-mongo
+- Mongo port: 27017
+- Mongo database: p16_handshake via existing Compose substitution
+- Mongo reads: enabled for the worker
+- Kafka bootstrap server: p16-kafka:9092
+- Kafka topic prefix: p16
+- worker group: p16-memory-worker, preserved by the worker implementation
+
+validation:
+- git diff --check: passed; Git emitted existing LF/CRLF working-copy warnings
+- docker compose --env-file .\\compose.lab2.env -f .\\docker-compose.split.lab2.yml config: passed with exit code 0
+- assistant image tag p16-assistant-service:local: present
+- Dockerfile.assistant copies the complete app tree
+- backend/app/workers/memory_worker.py: present in the image build context
+
+preservation checks:
+- existing split services and ports remain: 9160, 9161, 9162, 9163, 9164, 9165, 9166, and 9167
+- no p16-mongo or p16-kafka service definitions were added
+- the external p16-network configuration remains in use
+- no containers were built, started, or restarted
+- no topics were created, no messages were published, and no databases were modified
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

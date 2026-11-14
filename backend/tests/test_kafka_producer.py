@@ -5,7 +5,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from app.core.config import Settings
-from app.core.kafka import get_kafka_producer
+from app.core.kafka import create_kafka_producer, get_kafka_producer
 from app.messaging.envelope import APPLICATION_CREATED, create_envelope
 from app.messaging.producer import KafkaPublishError, publish_event, topic_name
 
@@ -106,6 +106,17 @@ class KafkaProducerTests(TestCase):
         with patch("app.core.kafka.create_kafka_producer") as create:
             self.assertIsNone(get_kafka_producer(config))
             create.assert_not_called()
+
+    def test_core_producer_omits_unsupported_delivery_timeout(self):
+        config = self.make_settings(enabled=True)
+
+        with patch("kafka.KafkaProducer") as producer_class:
+            create_kafka_producer(config)
+
+        kwargs = producer_class.call_args.kwargs
+        self.assertEqual(kwargs["bootstrap_servers"], ["p16-kafka:9092"])
+        self.assertEqual(kwargs["request_timeout_ms"], 5000)
+        self.assertNotIn("delivery_timeout_ms", kwargs)
 
 
 if __name__ == "__main__":

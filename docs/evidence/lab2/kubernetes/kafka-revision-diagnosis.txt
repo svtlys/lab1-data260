@@ -1,0 +1,49 @@
+kafka revision diagnosis
+date: 2026-11-14
+
+local manifest:
+- KAFKA_PROCESS_ROLES: broker,controller
+- KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+- KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://p16-kafka:9092
+- KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+- KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+- KAFKA_CONTROLLER_QUORUM_VOTERS: 1@p16-kafka:9093
+- KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+live StatefulSet:
+- name: p16-kafka
+- generation: 3
+- update strategy: RollingUpdate
+- partition: 0
+- current revision: p16-kafka-5f97c46ff7
+- update revision: p16-kafka-9f5b8df76
+- replicas: 1
+- updated replicas: 0
+- ready replicas: 0
+- the StatefulSet pod template contains the complete corrected Kafka values.
+
+active pod:
+- name: p16-kafka-0
+- owner: StatefulSet/p16-kafka
+- created: 2026-11-14T07:53:27Z
+- phase: Running
+- ready: false
+- restarts: 9
+- controller revision: p16-kafka-5f97c46ff7
+- the pod still contains the old truncated values: process roles=broker, listeners=PLAINTEXT://:9092, and listener security protocol map=CONTROLLER:PLAINTEXT.
+
+controller revisions:
+- p16-kafka-5f97c46ff7: revision 1
+- p16-kafka-66678f57c4: revision 2
+- p16-kafka-9f5b8df76: revision 3
+
+events:
+- the latest Kafka-related warning was BackOff for the Kafka container.
+- the Kafka container was started again, but no replacement-pod event was observed.
+- no StatefulSet controller warning explaining the stalled revision transition was observed.
+
+diagnosis:
+- the manifest and StatefulSet template are corrected.
+- the pod remains on the original ControllerRevision, so the desired update revision has not been adopted.
+- the old pod continues failing before readiness with: No security protocol defined for listener PLAINTEXT.
+- no Secret values, passwords, tokens, or environment contents are recorded here.

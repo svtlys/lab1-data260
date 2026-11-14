@@ -1,0 +1,28 @@
+context: docker-desktop
+node: desktop-control-plane Ready
+
+namespace apply:
+namespace/p16 created
+
+namespace check:
+NAME   STATUS   AGE
+p16    Active
+
+server dry-run: k8s/01-config.yaml
+configmap/p16-config created (server dry run)
+secret/p16-secrets created (server dry run)
+
+server dry-run: k8s/10-app-services.yaml
+8 deployments and 8 services created (server dry run)
+
+server dry-run: k8s/20-infrastructure.yaml
+3 services and 3 statefulsets created (server dry run)
+
+server dry-run: k8s/30-storage.yaml
+3 persistentvolumeclaims created (server dry run)
+
+actual-resource-check:
+get all -n p16: no application resources found
+get pvc -n p16: no persistent volume claims found
+get configmap -n p16: kube-root-ca.crt only; automatic Kubernetes namespace ConfigMap
+get secret -n p16: no secrets found

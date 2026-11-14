@@ -1,0 +1,43 @@
+kafka dns and listener diagnosis
+date: 2026-11-14
+
+service:
+- name: p16-kafka
+- type: ClusterIP headless
+- clusterIP: None
+- selector: app=p16-kafka
+- exposed port: 9092/TCP
+- target port: kafka, resolving to the Kafka container port 9092
+- no Service port for 9093 exists.
+
+endpoints:
+- pod address: 10.244.0.11
+- hostname: p16-kafka-0
+- ready: false
+- serving: false
+- endpoint port: 9092 only
+
+pod:
+- name: p16-kafka-0
+- phase: Error
+- ready: false
+- pod IP: 10.244.0.11
+
+sanitized listener configuration:
+- KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+- KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://p16-kafka:9092
+- KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+- KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+- KAFKA_CONTROLLER_QUORUM_VOTERS: 1@p16-kafka:9093
+- KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+error:
+- Kafka reports UnknownHostException for p16-kafka while connecting to p16-kafka:9093.
+- Kafka then exits after failing to wait for the controller acknowledgement.
+
+diagnosis:
+- p16-kafka exists as a Kubernetes Service name, but the Service does not expose port 9093.
+- the headless Service has only a not-ready endpoint, so p16-kafka is not currently a usable controller endpoint for this pod.
+- the advertised broker listener uses 9092, while the KRaft controller quorum uses 9093.
+- the exact remaining configuration issue is that the controller listener needs a resolvable pod/service address and Service port 9093, with startup DNS publication appropriate for a single-node KRaft broker.
+- no Secret values, passwords, tokens, or unrelated environment contents are recorded here.

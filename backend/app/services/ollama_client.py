@@ -96,7 +96,10 @@ class OllamaClient:
             "model": self.model,
             "messages": list(messages),
             "stream": False,
-            "options": {"temperature": temperature},
+            "options": {
+                "temperature": temperature,
+                "num_ctx": settings.assistant_context_tokens,
+            },
         }
 
         if tools:

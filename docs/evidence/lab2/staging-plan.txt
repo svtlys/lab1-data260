@@ -1,0 +1,156 @@
+Lab 2 read-only staging plan
+Date: 2026-11-14
+Branch: vrishin-lab2
+HEAD: e6d6842
+
+No files were staged. This is a proposed list only.
+
+Category A — safe Lab 2 source/config/test candidates
+-----------------------------------------------------
+Modified tracked files:
+- backend/app/api/routes/applications.py
+- backend/app/api/routes/assistant.py
+- backend/app/assistant/loop.py
+- backend/app/core/config.py
+- backend/app/core/kafka.py
+- backend/app/schemas/assistant.py
+- backend/app/services/ollama_client.py
+- backend/tests/test_assistant_api.py
+- backend/tests/test_assistant_loop.py
+- backend/tests/test_kafka_producer.py
+
+Untracked source, configuration, migration, and test files:
+- backend/app/assistant/context.py
+- backend/app/assistant/guards.py
+- backend/app/assistant/memory.py
+- backend/app/assistant/memory_seed.py
+- backend/app/workers/memory_worker.py
+- backend/scripts/seed_memory.py
+- backend/tests/test_context.py
+- backend/tests/test_event_schema_compatibility.py
+- backend/tests/test_guards.py
+- backend/tests/test_memory.py
+- backend/tests/test_memory_worker.py
+- backend/tests/test_schema_compatibility.py
+- database/03_lab1_seed_compatibility.sql
+- database/04_event_schema_compatibility.sql
+- docker-compose.split.lab2.yml
+- k8s/00-namespace.yaml
+- k8s/01-config.yaml
+- k8s/10-app-services.yaml
+- k8s/20-infrastructure.yaml
+- k8s/30-storage.yaml
+
+These are proposed candidates only. They still require a separate review of
+scope, secrets, and dependency completeness before staging.
+
+Category B — verified Lab 2 evidence candidates
+-----------------------------------------------
+- docs/evidence/lab2/application-flow/01-job-details.png
+- docs/evidence/lab2/application-flow/02-application-success.png
+- docs/evidence/lab2/application-flow/03-my-applications.png
+- docs/evidence/lab2/application-flow/application-flow-notes.txt
+- docs/evidence/lab2/assistant-api-integration.txt
+- docs/evidence/lab2/assistant-context-guards-integration.txt
+- docs/evidence/lab2/assistant-integration-audit.txt
+- docs/evidence/lab2/assistant-loop-integration.txt
+- docs/evidence/lab2/kubernetes/kafka-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-dns-listener-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-final-readiness.txt
+- docs/evidence/lab2/kubernetes/kafka-fix-verification.txt
+- docs/evidence/lab2/kubernetes/kafka-pod-recreated.txt
+- docs/evidence/lab2/kubernetes/kafka-probe-diagnosis-2.txt
+- docs/evidence/lab2/kubernetes/kafka-probe-fix.txt
+- docs/evidence/lab2/kubernetes/kafka-readiness-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-revision-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-rollout-verification.txt
+- docs/evidence/lab2/kubernetes/kafka-service-fix.txt
+- docs/evidence/lab2/kubernetes/namespace-dry-run.png
+- docs/evidence/lab2/kubernetes/namespace-dry-run.txt
+- docs/evidence/lab2/kubernetes/secret-created.png
+- docs/evidence/lab2/kubernetes/secret-created.txt
+- docs/evidence/lab2/memory-consolidation-final.png
+- docs/evidence/lab2/memory-consolidation-final.txt
+- docs/evidence/lab2/memory-kafka-config-fix.txt
+- docs/evidence/lab2/memory-worker-compose.txt
+- docs/evidence/lab2/memory-worker-healthcheck-fix.txt
+- docs/evidence/lab2/memory-worker-running.txt
+- docs/evidence/lab2/partner-branch-audit.txt
+- docs/evidence/lab2/partner-memory-audit.txt
+- docs/evidence/lab2/partner-memory-integration.txt
+- docs/evidence/lab2/pre-push-audit.txt
+- docs/evidence/lab2/staging-plan.txt
+
+These files contain sanitized observations or evidence from the Lab 2 work.
+They should be staged only after confirming the corresponding evidence is
+required by the report and contains no private data.
+
+Category C — protected Lab 1 files to exclude
+---------------------------------------------
+- docs/LabPair-16_Lab1_Report.before-vrishin-edit.docx
+- docs/evidence/test-1-internship-preferences-tool-calls-final.png
+- docs/evidence/test-2-remote-data-science-internship.png
+- docs/evidence/test-3-computer-science-event.png
+- docs/evidence/test-4-follow-up-higher-paying-final.png
+- docs/evidence/test-5-no-matching-company.png
+
+Existing tracked Lab 1 artifacts also remain excluded from any staging plan:
+- docs/LabPair-16_Lab1_Report.docx
+- docs/LabPair-16_Lab1_Report.pdf
+
+Category D — generated, superseded, or unverified artifacts to exclude
+---------------------------------------------------------------------
+- docs/evidence/lab2/application-flow/namespace-dry-run.png
+  (misplaced/duplicate-looking evidence image; do not stage without review)
+- docs/evidence/lab2/memory-consolidation.txt
+  (earlier consolidation-run evidence; superseded by the final run report)
+- docs/vrishin_report_sections_draft.md
+  (explicitly excluded report draft)
+
+Existing tracked or previously generated artifacts that must remain excluded
+even though they are not current working-tree changes:
+- METRICS.md
+- docs/evidence/live_reliability_2026-10-19/live_reliability_results.json
+- docs/evidence/live_reliability_2026-10-19/live_reliability_results.md
+- docs/evidence/live_reliability_2026-10-19/live_transcripts.md
+- docs/LabPair-16_Lab1_Report.pdf
+
+These are not to be treated as fresh, independently verified Lab 2 evidence.
+
+Category E — secret, credential, seed, or local-only files to exclude
+--------------------------------------------------------------------
+- backend/seed_preview.sql
+
+This file is untracked and not ignored. Do not stage it. No .env file,
+compose-secret file, node_modules directory, virtual environment, uploads
+directory, or __pycache__ file appeared in the modified/untracked inventory.
+The ignored local files remain excluded:
+- backend/.env
+- frontend/.env.local
+- compose.lab2.env
+
+Exact proposed staging set
+--------------------------
+Stage only Category A files and the specifically approved Category B evidence
+files after a separate review. Exclude every Category C, D, and E file. Do
+not use git add . or git add -A.
+
+Screenshot status
+-----------------
+docs/evidence/lab2/staging-plan.png was not created because screenshot capture
+is unavailable. No screenshot was invented.
+
+Manual screenshot commands
+--------------------------
+From a PowerShell window at C:\Projects\lab1-data260, capture the output of:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+git branch --show-current
+git log -1 --oneline --decorate
+git status --short
+git diff --cached --name-only
+Get-Content .\docs\evidence\lab2\staging-plan.txt
+
+Do not display .env contents, passwords, tokens, authorization headers, or
+private uploads in the screenshot.

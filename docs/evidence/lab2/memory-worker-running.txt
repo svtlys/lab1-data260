@@ -1,0 +1,34 @@
+memory worker runtime verification
+
+external infrastructure before startup:
+- p16-mongo: running and healthy
+- p16-kafka: running and healthy
+
+image and container:
+- assistant image build: succeeded from backend/Dockerfile.assistant
+- image: p16-assistant-service:local
+- container: lab1-data260-p16-memory-worker-1
+- command: python -m app.workers.memory_worker
+- status after startup poll: running
+- exit code: 0
+- worker logs: no output during the verification window
+
+network:
+- p16-memory-worker attached to p16-network
+- p16-mongo and p16-kafka are present on p16-network
+- configured worker endpoints: p16-mongo:27017 and p16-kafka:9092
+
+healthcheck note:
+- the Compose worker service has no healthcheck
+- the reused assistant image carries its existing HTTP healthcheck, which remained in starting state because the worker is not an HTTP server
+- this inherited status is not used as a worker health claim
+
+scope checks:
+- Compose output showed only p16-memory-worker being created and started
+- existing application services were not restarted by this command
+- no database migration or seed command ran
+- no Kafka topic creation or message publishing command ran
+- no AWS resources were created
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

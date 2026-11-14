@@ -1,0 +1,53 @@
+assistant loop integration
+
+source ref: origin/alyssa-lab2
+current branch baseline: vrishin-lab2
+
+files changed for this step:
+- backend/app/assistant/loop.py
+- backend/tests/test_assistant_loop.py
+
+manual merge scope:
+- preserved the existing five-iteration ceiling
+- preserved one bounded repair attempt
+- preserved conversation, message, and tool-call persistence
+- preserved confirmation-gated save behavior
+- preserved no-match event fallback
+- preserved untrusted database-content delimiters
+- preserved prompt-injection and authorization behavior
+- preserved Ollama timeout/error handling
+- omitted unrelated partner date/tool-description changes
+- omitted the partner database-rollback test because it was outside this approved step
+
+Lab 2 behavior added:
+- token usage tracking with model-reported counts and safe estimates
+- context percentage and warning metadata above 70 percent
+- model-copy compaction above the 85 percent threshold
+- compaction metadata on the run result
+- cleaned trace_id generation and propagation through run results and logs
+- instruction-leak filtering through app.assistant.guards
+- configurable test-time context budget with an 8192-token local default until core-config wiring is approved
+
+validation results:
+- tests.test_assistant_loop: 12 passed
+- tests.test_assistant_api: 2 passed
+- tests.test_context tests.test_guards: 20 passed
+- tests.test_memory tests.test_memory_worker: 36 passed
+- full backend discovery: 271 passed
+- py_compile for app/assistant/loop.py, context.py, and guards.py: passed
+- git diff --check: passed
+
+warnings observed:
+- Git reported existing LF/CRLF working-copy warnings
+- the full suite reported existing resource/deprecation warnings; no test failed
+
+preservation checks:
+- no Lab 1 assistant test deletions were found in the partner comparison
+- assistant route, schemas, tools, core config, Mongo, Kafka, workers, Docker, Kubernetes, and frontend files were not modified in this step
+- no workers were started, no Kafka messages were published, no memory seed was run with Kafka, and no databases were modified
+
+deferred wiring:
+- route and schema integration for exposing trace, token, context, and compaction fields remains intentionally deferred
+
+screenshot:
+- not captured by automation; a manual screenshot is required if visual evidence is needed

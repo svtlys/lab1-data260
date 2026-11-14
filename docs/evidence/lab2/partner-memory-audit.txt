@@ -1,0 +1,109 @@
+partner assistant-memory compatibility audit
+date: 2026-11-14
+
+refs:
+- current: vrishin-lab2
+- partner: origin/alyssa-lab2
+- no branch was checked out and no integration was performed.
+
+partner-only additive files:
+
+backend/app/assistant/context.py
+- absent on vrishin-lab2; additive.
+- provides trace-id cleaning, token estimation/tracking, 70 percent warning, and context compaction.
+- requires the existing assistant loop and assistant_context_tokens configuration.
+- no direct Mongo or Kafka connection.
+
+backend/app/assistant/guards.py
+- absent on vrishin-lab2; additive.
+- normalizes assistant search arguments and protects system instructions.
+- requires assistant tools/loop integration; no database connection.
+
+backend/app/assistant/memory.py
+- absent on vrishin-lab2; additive but coupled to the modified assistant route.
+- collections: assistant_rules, student_memory, conversations, and activity_logs.
+- uses get_mongo_database through get_memory_database; configured database defaults to p16_handshake.
+- falls back to an in-process database when Mongo reads are disabled, so memory is not durable in that mode.
+- queue_consolidation creates the existing validated memory.consolidate envelope and publishes through the existing producer.
+- when Kafka is disabled or unavailable, consolidation runs inline.
+
+backend/app/assistant/memory_seed.py
+- absent on vrishin-lab2; additive.
+- seeds student_memory through the shared memory collection constant.
+- uses an injected database and does not connect by itself.
+
+backend/app/workers/memory_worker.py
+- absent on vrishin-lab2; additive.
+- consumes p16.memory.consolidate in group p16-memory-worker.
+- uses the existing process_record reliability foundation, including processed_events, retries, DLQ, and manual offset commit.
+- writes activity_logs after consolidation; the shared foundation records processed_events after handler success.
+- lazily obtains Mongo and Kafka clients.
+
+backend/scripts/seed_memory.py
+- absent on vrishin-lab2; additive utility.
+- supports dry-run, direct consolidation, and explicit Kafka publishing.
+- the Kafka mode was not executed in this audit.
+- non-dry-run mode requires Mongo reads to be enabled and uses the configured p16_handshake database.
+
+backend/tests/test_context.py
+- absent on vrishin-lab2; additive; 13 test methods.
+
+backend/tests/test_guards.py
+- absent on vrishin-lab2; additive; 7 test methods.
+
+backend/tests/test_memory.py
+- absent on vrishin-lab2; additive; 30 test methods.
+
+backend/tests/test_memory_worker.py
+- absent on vrishin-lab2; additive; 6 test methods.
+- tests use fake databases/consumers and do not require live Mongo or Kafka.
+
+modified existing files requiring manual merge:
+
+backend/app/api/routes/assistant.py
+- exists on both branches; conflicts with current assistant route.
+- adds X-Trace-Id handling, /memory command handling, Mongo conversation persistence, token usage, and compaction response fields.
+- preserves the existing MySQL conversation/tool workflow but must be manually reconciled with current route changes.
+
+backend/app/assistant/loop.py
+- exists on both branches; manual merge required.
+- adds context tracking, compaction, trace IDs, guardrails, and memory context.
+
+backend/app/assistant/tools.py
+- exists on both branches; manual merge required.
+- adds argument normalization and event eligibility fields.
+
+backend/app/schemas/assistant.py
+- exists on both branches; manual merge required.
+- adds trace_id, token_usage, and compaction fields.
+
+backend/app/core/config.py
+- exists on both branches; manual merge required.
+- adds assistant_context_tokens, db_pool_size, db_max_overflow, and db_pool_timeout_seconds.
+- Mongo defaults are MONGO_HOST 127.0.0.1, MONGO_PORT 27017, database p16_handshake, and MONGO_READS_ENABLED=false.
+- Kafka defaults are KAFKA_ENABLED=false and KAFKA_BOOTSTRAP_SERVERS=p16-kafka:9092.
+
+configuration and dependency checks:
+- backend/requirements.txt has no partner-only change; the shared branch already contains pymongo and kafka-python-ng.
+- backend/app/core/mongo.py is unchanged relative to the current branch and uses the feature flag before creating a pooled client.
+- backend/app/messaging/envelope.py, producer.py, consumer.py, and idempotency.py are unchanged relative to the current branch.
+- the memory event uses the existing envelope event type memory.consolidate, topic prefix p16, related student ID as the Kafka key, and the existing trace_id field.
+- the memory worker group and topic match the agreed design and shared consumer reliability behavior.
+
+Docker Compose compatibility:
+- origin/alyssa-lab2 does not contain docker-compose.split.lab2.yml.
+- the local docker-compose.split.lab2.yml exists only as an untracked working-tree file.
+- no memory-worker service is defined in the partner ref.
+- a future worker service can be additive using the backend image with command `python -m app.workers.memory_worker`, Mongo host p16-mongo, port 27017, database p16_handshake, and Kafka p16-kafka:9092.
+- it must enable Mongo access and Kafka publishing for the worker only, depend on healthy Mongo/Kafka, and must not change existing application services.
+- it is not ready to add until the worker tests and runtime image/import path are verified and Kafka is healthy.
+
+compatibility conclusion:
+- memory collections and database selection are compatible with the current Mongo foundation.
+- memory topic, envelope, producer, and consumer behavior are compatible with the current Kafka foundation.
+- the implementation is additive at the file level, but assistant route/loop/schema/config changes require manual integration and regression tests.
+- do not integrate the partner branch wholesale and do not run scripts.seed_memory --kafka during integration.
+- recommended order: integrate memory utility/tests, manually merge assistant context and route/schema changes, run focused tests, then add a separate worker Compose service.
+
+screenshot:
+- not captured by automation. Manual capture should show a PowerShell window containing the sanitized partner-only file list, diff status, configuration/dependency summary, memory worker topic/group output, and the absence of docker-compose.split.lab2.yml in the partner ref.

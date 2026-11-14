@@ -6,12 +6,14 @@ import json
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_student
-from app.assistant.loop import AssistantLoop
+from app.assistant.context import clean_trace_id
+from app.assistant.memory import get_memory_database, handle_memory_command, is_memory_command
+from app.assistant.loop import AssistantLoop, AssistantRunResult
 from app.core.database import get_db
 from app.models.assistant_conversation import AssistantConversation, AssistantMessage
 from app.models.assistant_tool_log import AssistantToolLog
@@ -99,6 +101,7 @@ def chat_with_assistant(
     request: AssistantChatRequest,
     current_user: User = Depends(require_student),
     db: Session = Depends(get_db),
+    x_trace_id: str | None = Header(default=None),
 ):
     """run one bounded assistant turn and persist its conversation trace."""
 
@@ -126,14 +129,35 @@ def chat_with_assistant(
         db.refresh(conversation)
 
     history = load_history(conversation.id, db)
-    loop = AssistantLoop()
-    result = loop.run(
-        db=db,
-        student_id=current_user.id,
-        user_message=request.message,
-        history=history,
-        confirmed_save=request.confirm_save,
-    )
+    trace_id = clean_trace_id(x_trace_id)
+    if is_memory_command(request.message):
+        memory_database = get_memory_database()
+        answer = handle_memory_command(
+            memory_database,
+            current_user.id,
+            request.message,
+            trace_id=trace_id,
+        )
+        result = AssistantRunResult(
+            answer=answer,
+            messages=[
+                {"role": "system", "content": "/memory command"},
+                *history,
+                {"role": "user", "content": request.message},
+                {"role": "assistant", "content": answer},
+            ],
+            trace_id=trace_id,
+        )
+    else:
+        loop = AssistantLoop()
+        result = loop.run(
+            db=db,
+            student_id=current_user.id,
+            user_message=request.message,
+            history=history,
+            confirmed_save=request.confirm_save,
+            trace_id=trace_id,
+        )
 
     # save only the new messages from this assistant turn
     new_messages = result.messages[1 + len(history):]
@@ -190,4 +214,7 @@ def chat_with_assistant(
             for tool_call in result.tool_calls
         ],
         created_at=conversation.created_at,
+        trace_id=result.trace_id or trace_id,
+        token_usage=result.token_usage,
+        compaction=result.compaction,
     )

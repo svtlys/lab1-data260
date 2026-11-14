@@ -42,3 +42,6 @@ class AssistantChatResponse(BaseModel):
     reached_iteration_ceiling: bool
     tool_calls: list[AssistantToolCallResponse]
     created_at: datetime
+    trace_id: str | None = None
+    token_usage: dict[str, Any] | None = None
+    compaction: dict[str, Any] | None = None

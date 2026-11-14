@@ -1,0 +1,160 @@
+Lab 2 pre-push audit
+Date: 2026-11-14
+Scope: read-only audit of the current vrishin-lab2 working tree
+
+Git state
+---------
+Current branch: vrishin-lab2
+HEAD: e6d6842 (Lab 2: add nginx gateway configuration)
+Remote tracking: origin/vrishin-lab2
+HEAD matches the remote-tracking branch at audit time.
+Staged files: none at audit time.
+git diff --check: passed (exit code 0). Git emitted only normal LF/CRLF conversion warnings for modified Python files.
+
+Files changed since the last pushed commit
+------------------------------------------
+Tracked working-tree modifications relative to origin/vrishin-lab2:
+- backend/app/api/routes/applications.py
+- backend/app/api/routes/assistant.py
+- backend/app/assistant/loop.py
+- backend/app/core/config.py
+- backend/app/core/kafka.py
+- backend/app/schemas/assistant.py
+- backend/app/services/ollama_client.py
+- backend/tests/test_assistant_api.py
+- backend/tests/test_assistant_loop.py
+- backend/tests/test_kafka_producer.py
+
+Diff summary: 10 tracked files, 291 insertions, 22 deletions.
+
+Untracked non-ignored files at audit time:
+- backend/app/assistant/context.py
+- backend/app/assistant/guards.py
+- backend/app/assistant/memory.py
+- backend/app/assistant/memory_seed.py
+- backend/app/workers/memory_worker.py
+- backend/scripts/seed_memory.py
+- backend/seed_preview.sql
+- backend/tests/test_context.py
+- backend/tests/test_event_schema_compatibility.py
+- backend/tests/test_guards.py
+- backend/tests/test_memory.py
+- backend/tests/test_memory_worker.py
+- backend/tests/test_schema_compatibility.py
+- database/03_lab1_seed_compatibility.sql
+- database/04_event_schema_compatibility.sql
+- docker-compose.split.lab2.yml
+- docs/LabPair-16_Lab1_Report.before-vrishin-edit.docx
+- docs/evidence/lab2/application-flow/01-job-details.png
+- docs/evidence/lab2/application-flow/02-application-success.png
+- docs/evidence/lab2/application-flow/03-my-applications.png
+- docs/evidence/lab2/application-flow/application-flow-notes.txt
+- docs/evidence/lab2/application-flow/namespace-dry-run.png
+- docs/evidence/lab2/assistant-api-integration.txt
+- docs/evidence/lab2/assistant-context-guards-integration.txt
+- docs/evidence/lab2/assistant-integration-audit.txt
+- docs/evidence/lab2/assistant-loop-integration.txt
+- docs/evidence/lab2/kubernetes/kafka-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-dns-listener-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-final-readiness.txt
+- docs/evidence/lab2/kubernetes/kafka-fix-verification.txt
+- docs/evidence/lab2/kubernetes/kafka-pod-recreated.txt
+- docs/evidence/lab2/kubernetes/kafka-probe-diagnosis-2.txt
+- docs/evidence/lab2/kubernetes/kafka-probe-fix.txt
+- docs/evidence/lab2/kubernetes/kafka-readiness-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-revision-diagnosis.txt
+- docs/evidence/lab2/kubernetes/kafka-rollout-verification.txt
+- docs/evidence/lab2/kubernetes/kafka-service-fix.txt
+- docs/evidence/lab2/kubernetes/namespace-dry-run.png
+- docs/evidence/lab2/kubernetes/namespace-dry-run.txt
+- docs/evidence/lab2/kubernetes/secret-created.png
+- docs/evidence/lab2/kubernetes/secret-created.txt
+- docs/evidence/lab2/memory-consolidation-final.png
+- docs/evidence/lab2/memory-consolidation-final.txt
+- docs/evidence/lab2/memory-consolidation.txt
+- docs/evidence/lab2/memory-kafka-config-fix.txt
+- docs/evidence/lab2/memory-worker-compose.txt
+- docs/evidence/lab2/memory-worker-healthcheck-fix.txt
+- docs/evidence/lab2/memory-worker-running.txt
+- docs/evidence/lab2/partner-branch-audit.txt
+- docs/evidence/lab2/partner-memory-audit.txt
+- docs/evidence/lab2/partner-memory-integration.txt
+- docs/evidence/test-1-internship-preferences-tool-calls-final.png
+- docs/evidence/test-2-remote-data-science-internship.png
+- docs/evidence/test-3-computer-science-event.png
+- docs/evidence/test-4-follow-up-higher-paying-final.png
+- docs/evidence/test-5-no-matching-company.png
+- docs/vrishin_report_sections_draft.md
+- k8s/00-namespace.yaml
+- k8s/01-config.yaml
+- k8s/10-app-services.yaml
+- k8s/20-infrastructure.yaml
+- k8s/30-storage.yaml
+
+Sensitive/protected-file review
+-------------------------------
+- backend/.env, frontend/.env.local, and compose.lab2.env are ignored and were not listed as commit candidates.
+- backend/.venv is ignored. No node_modules, uploads, or virtual-environment files were listed as commit candidates.
+- backend/seed_preview.sql is present as an untracked, non-ignored file. It must remain uncommitted because it is generated seed SQL and may contain credential-shaped seed data.
+- No candidate path was identified as an AWS credential, private-key, token, or password file.
+- A redacted high-confidence pattern scan did not identify a credential-bearing candidate file. Values were not printed.
+
+Protected Lab 1 and generated artifacts
+---------------------------------------
+Protected Lab 1 reports remain present:
+- docs/LabPair-16_Lab1_Report.docx
+- docs/LabPair-16_Lab1_Report.pdf
+- docs/LabPair-16_Lab1_Report.before-vrishin-edit.docx
+
+Existing evidence remains present, including the Lab 1 evidence images and the Lab 2 evidence folders. The latest memory-consolidation screenshot exists:
+- docs/evidence/lab2/memory-consolidation-final.png
+
+Existing generated/evidence artifacts that require provenance review before use as proof include:
+- docs/evidence/live_reliability_2026-10-19/live_reliability_results.json
+- docs/evidence/live_reliability_2026-10-19/live_reliability_results.md
+- docs/evidence/live_reliability_2026-10-19/live_transcripts.md
+- METRICS.md
+- docs/LabPair-16_Lab1_Report.pdf
+
+These artifacts were not used to claim fresh test results. No current working-tree modification was reported for AI_USE.md, METRICS.md, or RUN_LOG.txt.
+
+Validation status
+-----------------
+- Full backend suite: passed, 274 tests.
+- Focused Kafka tests (envelope, producer, consumer): passed, 24 tests.
+- Memory and memory-worker tests: passed, 36 tests.
+- Assistant API, loop, context, and guard tests: passed, 36 tests.
+- Frontend production build: passed; Vite transformed 148 modules and completed successfully.
+- Split Compose validation: passed with docker compose config --quiet.
+- Kubernetes manifest validation: passed with kubectl apply --dry-run=client -f .\\k8s\\.
+
+Validation warnings
+-------------------
+- Backend tests emitted a Starlette deprecation warning and SQLite ResourceWarnings; no test failed.
+- Kubernetes client dry-run emitted a warning that the existing p16-secrets object lacks the last-applied-configuration annotation; no live resource was changed by the dry-run.
+
+Screenshot status
+-----------------
+The requested file docs/evidence/lab2/pre-push-audit.png was not created because screenshot capture is unavailable in this environment. No screenshot result was invented.
+
+Manual screenshot command
+-------------------------
+From a PowerShell window at C:\Projects\lab1-data260, run the following sanitized audit view and capture that window:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+git branch --show-current
+git log -1 --oneline --decorate
+git branch -vv
+git status --short
+git diff --check
+git diff --stat origin/vrishin-lab2
+git diff --name-status origin/vrishin-lab2
+git diff --cached --name-only
+Get-ChildItem docs\evidence\lab2\memory-consolidation-final.png
+
+No credentials, tokens, authorization headers, environment values, or private data should be displayed in the captured window.
+
+Conclusion
+----------
+The current branch passes the recorded automated checks, but it is not ready for an unrestricted push review because the working tree contains 10 modified tracked files and 62 untracked non-ignored files, including backend/seed_preview.sql and generated/evidence artifacts. Nothing was staged, committed, pushed, merged, rebased, deleted, or edited except for creation of this requested audit report.

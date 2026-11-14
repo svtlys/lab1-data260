@@ -1,0 +1,52 @@
+Kafka failure demonstration 3 — poison message and DLQ
+Date: 2026-11-14
+
+Setup
+-----
+Topic: p16.job.created
+Event type: job.created
+Worker: existing JobWorker and shared consumer reliability foundation
+Isolated consumer group: p16-demo-poison-1794652978
+Poison event_id: e4a94793-0618-44f4-accf-fb41dd9b603f
+Valid follow-up event_id: 9c893ebd-21cb-4533-afa0-2903b33f7ffc
+
+The poison envelope was valid but intentionally omitted the required title
+field. A valid demo job event followed on the same topic and key.
+
+Observed result
+---------------
+- Producer result: published_count=2 poison_then_valid.
+- Worker output: worker_ready.
+- Poison result: status=dead_lettered, attempts=3, committed=True.
+- Follow-up result: status=processed, attempts=1, committed=True.
+- DLQ verification: dlq_match=true, attempts=3 on p16.dlq.
+- Poison event activity_logs count: 0.
+- Poison event processed_events count: 0.
+- Follow-up event activity_logs count: 1.
+- Follow-up event processed_events count: 1.
+- Group offsets after processing: partition 0 current 4/log end 4/lag 0;
+  partition 1 current 2/log end 2/lag 0; partition 2 current 0/log end 0/lag 0.
+- Sanitized worker output included two retry warnings, then the dead-letter
+  result, followed by the successful follow-up result.
+
+The first wrapper attempt failed before consuming because of a temporary
+command-quoting syntax error. It created no consumer group, database write, or
+DLQ message. The corrected bounded wrapper produced the observed result above.
+
+Safety
+------
+No existing activity log, processed event, application record, memory record,
+or evidence file was deleted or modified. The bounded helper exited after two
+records and was removed. No source file was changed and no topic was created.
+
+Screenshot status
+-----------------
+poison-message-dlq.png was not captured automatically.
+To capture sanitized evidence manually:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+Get-Content .\docs\evidence\lab2\kafka-failures\poison-message-dlq.txt
+
+Save the screenshot as:
+C:\Projects\lab1-data260\docs\evidence\lab2\kafka-failures\poison-message-dlq.png

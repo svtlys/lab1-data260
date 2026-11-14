@@ -1,0 +1,47 @@
+Kafka failure demonstration 1 — duplicate event
+Date: 2026-11-14
+
+Setup
+-----
+Topic: p16.job.created
+Event type: job.created
+Worker: existing JobWorker
+Isolated consumer group: p16-demo-job-dup-1794652589
+Kafka key: 902589
+Demo event_id: c4a25d44-b7e4-4f33-b03e-3711ce0ac2a4
+
+The same valid envelope was published twice with the same event_id and key.
+The payload used only clearly marked demo job data and no credentials.
+
+Observed result
+---------------
+- Producer result: published_count=2.
+- activity_logs count for the demo event: before 0, after 1.
+- processed_events count for the demo event: before 0, after 1.
+- The first delivery was processed; the second was skipped by event_id idempotency.
+- Group offsets after processing: p16.job.created partition 0 current 2,
+  log end 2, lag 0; partitions 1 and 2 were 0/0 with lag 0.
+- The worker emitted no application-specific log lines in the temporary
+  container; the database counts and committed offsets are the evidence.
+
+The first helper attempt inherited MONGO_READS_ENABLED=false and exited before
+processing. It produced zero writes. The isolated worker was rerun with
+MONGO_READS_ENABLED=true and produced the result above.
+
+Safety
+------
+No existing activity log, processed event, application record, memory record,
+or evidence file was deleted or modified. The temporary worker was stopped
+after verification. No source file was changed and no topic was created.
+
+Screenshot status
+-----------------
+duplicate-event.png was not captured automatically.
+To capture sanitized evidence manually:
+
+Set-Location C:\Projects\lab1-data260
+Clear-Host
+Get-Content .\docs\evidence\lab2\kafka-failures\duplicate-event.txt
+
+Save the screenshot as:
+C:\Projects\lab1-data260\docs\evidence\lab2\kafka-failures\duplicate-event.png

@@ -96,3 +96,38 @@ The five required tools are present and tested:
 - `save_job_or_event`
 
 Tool results are returned as strings for both success and failure. Each tool call is logged with its name and arguments, and each assistant response includes a tool-call count. The save tool is protected by the confirmation gate and the loop remains limited to five iterations.
+
+## Lab 2 Kafka and memory measurements
+
+These are the measured local results recorded from the Kafka failure and
+assistant-memory demonstrations. No latency, throughput, or availability
+numbers are inferred here.
+
+| Measurement | Verified result |
+| --- | ---: |
+| Kafka topic partitions | 3 per required topic |
+| Kafka replication factor | 1 |
+| Duplicate-event publications | 2 |
+| Duplicate-event activity logs | 1 |
+| Duplicate-event processed events | 1 |
+| Duplicate-event consumer lag | 0 |
+| Worker-restart activity logs after recovery | 1 |
+| Worker-restart processed events after recovery | 1 |
+| Worker-restart offset | committed after recovery |
+| Poison-message retries | 3 |
+| Poison-message DLQ result | published to `p16.dlq` |
+| Valid event after poison | processed successfully |
+| Memory count before consolidation | 62 |
+| Memory count after consolidation | 38 active, 24 inactive |
+| Memory duplicates removed | 16 |
+| Memory contradictions resolved | 8 |
+| Memory consumer lag | 0 |
+
+Evidence for the Kafka failure measurements:
+
+- `docs/evidence/lab2/kafka-failures/duplicate-event.txt`
+- `docs/evidence/lab2/kafka-failures/worker-restart.txt`
+- `docs/evidence/lab2/kafka-failures/poison-message-dlq.txt`
+
+Evidence for memory consolidation is in
+`docs/evidence/lab2/memory-consolidation-final.txt`.

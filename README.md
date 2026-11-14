@@ -106,3 +106,78 @@ The verified build transformed 126 modules and completed successfully.
 ## Upload safety
 
 Application resumes and company profile images are stored under ignored upload directories. Uploaded resumes are validated as PDF files, and profile images are limited to JPEG, PNG, or WebP files of 2 MB or less. Uploaded files, local environments, and secrets must remain outside Git commits.
+
+## Lab 2 local Kafka and worker verification
+
+The Pair 16 local Kafka broker runs on the internal Docker network as
+`p16-kafka:9092`. Start the shared local infrastructure with:
+
+```powershell
+docker compose --env-file .\compose.lab2.env -f .\docker-compose.lab2.yml up -d p16-mysql p16-mongo p16-kafka
+docker compose --env-file .\compose.lab2.env -f .\docker-compose.lab2.yml ps p16-mysql p16-mongo p16-kafka
+```
+
+The required Pair 16 topics are:
+
+- `p16.application.created`
+- `p16.application.updated`
+- `p16.application.status_changed`
+- `p16.event.registration_created`
+- `p16.job.created`
+- `p16.memory.consolidate`
+- `p16.dlq`
+
+The local topic verification used three partitions and replication factor one
+for the single-broker environment. Inspect topics without publishing messages:
+
+```powershell
+docker exec p16-kafka sh -c '/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list'
+docker exec p16-kafka sh -c '/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --describe --topic p16.job.created'
+docker exec p16-kafka sh -c '/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list'
+docker exec p16-kafka sh -c '/opt/kafka/bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group p16-memory-worker'
+```
+
+The implemented worker consumer groups are:
+
+- `p16-application-worker` for `application.created` and `application.updated`.
+- `p16-event-worker` for `event.registration_created`.
+- `p16-job-worker` for `job.created`.
+- `p16-notification-worker` for `application.status_changed`.
+- `p16-memory-worker` for `memory.consolidate`.
+
+Workers use manual Kafka offsets, `processed_events.event_id` idempotency,
+three bounded attempts, and `p16.dlq` for a third failure. A worker can be
+run from the existing assistant image for local demonstrations:
+
+```powershell
+docker compose --env-file .\compose.lab2.env -f .\docker-compose.split.lab2.yml run --rm --no-deps -e KAFKA_ENABLED=true -e MONGO_READS_ENABLED=true p16-assistant-service python -m app.workers.job_worker
+```
+
+The three verified failure demonstrations used temporary isolated consumer
+groups and unique demo event IDs. Their sanitized results are recorded in:
+
+- `docs/evidence/lab2/kafka-failures/duplicate-event.txt`
+- `docs/evidence/lab2/kafka-failures/worker-restart.txt`
+- `docs/evidence/lab2/kafka-failures/poison-message-dlq.txt`
+
+The duplicate demonstration published the same valid event twice and produced
+one activity log and one processed-event record. The restart demonstration
+left the event uncommitted while the delayed helper was stopped, then recovered
+it with the same group. The poison demonstration retried three times, sent the
+event to `p16.dlq`, and continued with the following valid event.
+
+The verified assistant-memory demonstration uses the existing memory worker
+and the internal broker/database endpoints:
+
+```powershell
+docker compose --env-file .\compose.lab2.env -f .\docker-compose.split.lab2.yml run --rm --no-deps -e KAFKA_ENABLED=true -e MONGO_READS_ENABLED=true p16-assistant-service python -m scripts.seed_memory --kafka
+```
+
+Its sanitized result is recorded in
+`docs/evidence/lab2/memory-consolidation-final.txt`. Use unique local demo
+identifiers and inspect the consumer group and Mongo counts after processing.
+
+Secrets must come only from ignored local configuration such as
+`compose.lab2.env` or the local backend environment. Never commit environment
+files, passwords, JWT secrets, Kafka credentials, Mongo credentials, tokens,
+or private uploads.

@@ -141,3 +141,70 @@ Evidence files:
   docs/evidence/live_reliability_2026-10-19/live_transcripts.md
 
 This live run is separate from section 7, which records the earlier 20-turn deterministic fake-Ollama repair-path experiment.
+
+10. local Kafka topic setup and verification
+
+Date:
+  2026-11-14
+
+The healthy local broker was verified as `p16-kafka:9092`. The required Pair
+16 topics were observed with three partitions and replication factor one:
+  p16.application.created
+  p16.application.updated
+  p16.application.status_changed
+  p16.event.registration_created
+  p16.job.created
+  p16.memory.consolidate
+  p16.dlq
+
+No topic-creation evidence text file was present in the repository at the time
+of this documentation update, so this entry records only the observed broker
+state and does not claim a new creation run here.
+
+11. Kafka duplicate-event demonstration
+
+Date:
+  2026-11-14
+
+The same valid `job.created` envelope was published twice with one event_id.
+One activity log and one processed-event record resulted, and the isolated
+consumer group finished with zero lag.
+
+Evidence:
+  docs/evidence/lab2/kafka-failures/duplicate-event.txt
+
+12. Kafka worker failure and restart demonstration
+
+Date:
+  2026-11-14
+
+A delayed application worker was stopped before its database write. The same
+consumer group recovered the event after restart, then recorded one activity
+log and one processed-event record before the offset was committed.
+
+Evidence:
+  docs/evidence/lab2/kafka-failures/worker-restart.txt
+
+13. Kafka poison-message and DLQ demonstration
+
+Date:
+  2026-11-14
+
+An intentionally invalid but envelope-valid `job.created` payload failed three
+times, was published to `p16.dlq`, and the following valid event was processed.
+The consumer group finished with zero lag.
+
+Evidence:
+  docs/evidence/lab2/kafka-failures/poison-message-dlq.txt
+
+14. assistant-memory Kafka consolidation demonstration
+
+Date:
+  2026-11-14
+
+The verified memory run measured 62 entries before consolidation and 38 active
+plus 24 inactive afterward. It removed 16 duplicates, resolved 8 contradictions,
+and finished with zero consumer lag.
+
+Evidence:
+  docs/evidence/lab2/memory-consolidation-final.txt

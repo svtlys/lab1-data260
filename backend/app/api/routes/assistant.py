@@ -3,6 +3,7 @@ authenticated API route for the hand-built assistant.
 """
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -12,8 +13,16 @@ from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_student
 from app.assistant.context import clean_trace_id
-from app.assistant.loop import AssistantLoop
+from app.assistant.loop import AssistantLoop, AssistantRunResult
+from app.assistant.memory import (
+    build_memory_context,
+    get_memory_database,
+    handle_memory_command,
+    is_memory_command,
+    save_conversation_turn,
+)
 from app.core.database import get_db
+from app.core.mongo import get_mongo_database
 from app.models.assistant_conversation import AssistantConversation, AssistantMessage
 from app.models.assistant_tool_log import AssistantToolLog
 from app.models.student_profile import StudentProfile
@@ -24,6 +33,7 @@ from app.schemas.assistant import (
     AssistantToolCallResponse,
 )
 
+logger = logging.getLogger(__name__)
 
 # group assistant endpoints under /api/assistant
 router = APIRouter(
@@ -133,15 +143,33 @@ def chat_with_assistant(
     history = load_history(conversation.id, db)
     # use the caller's X-Trace-Id when it is a safe value, otherwise start a new trace
     trace_id = clean_trace_id(x_trace_id)
-    loop = AssistantLoop()
-    result = loop.run(
-        db=db,
-        student_id=current_user.id,
-        user_message=request.message,
-        history=history,
-        confirmed_save=request.confirm_save,
-        trace_id=trace_id,
-    )
+    memory_database = get_memory_database()
+    if is_memory_command(request.message):
+        # /memory commands are handled here, without the model, so they are instant and exact
+        answer = handle_memory_command(
+            memory_database, current_user.id, request.message, trace_id=trace_id
+        )
+        result = AssistantRunResult(
+            answer=answer,
+            messages=[
+                {"role": "system", "content": "/memory command"},
+                *history,
+                {"role": "user", "content": request.message},
+                {"role": "assistant", "content": answer},
+            ],
+            trace_id=trace_id,
+        )
+    else:
+        loop = AssistantLoop()
+        result = loop.run(
+            db=db,
+            student_id=current_user.id,
+            user_message=request.message,
+            history=history,
+            confirmed_save=request.confirm_save,
+            trace_id=trace_id,
+            memory_context=build_memory_context(memory_database, current_user.id),
+        )
 
     # save only the new messages from this assistant turn
     new_messages = result.messages[1 + len(history):]
@@ -175,6 +203,21 @@ def chat_with_assistant(
 
     conversation.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     db.commit()
+
+    # also keep the conversation (messages, trace id, token counts) in Mongo when it is enabled;
+    # a Mongo problem must never break the chat itself
+    if get_mongo_database() is not None:
+        try:
+            save_conversation_turn(
+                memory_database,
+                conversation.id,
+                current_user.id,
+                new_messages,
+                trace_id=result.trace_id or trace_id,
+                token_usage=result.token_usage,
+            )
+        except Exception:
+            logger.exception("could not save the conversation to mongo trace_id=%s", trace_id)
 
     return AssistantChatResponse(
         conversation_id=conversation.id,

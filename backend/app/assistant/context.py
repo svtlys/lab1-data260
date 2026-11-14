@@ -37,8 +37,16 @@ _TRACE_ID_PATTERN = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 # trace ids
 # ---------------------------------------------------------------------------
 def new_trace_id() -> str:
-    """create a fresh trace id (16 hex characters)."""
-    return uuid.uuid4().hex[:16]
+    """create a fresh trace id (a UUID string, so it fits the Kafka event envelope)."""
+    return str(uuid.uuid4())
+
+
+def trace_uuid(trace_id: str) -> uuid.UUID:
+    """return the trace id as a UUID; other safe ids map to a fixed UUID so events can still carry them."""
+    try:
+        return uuid.UUID(trace_id)
+    except ValueError:
+        return uuid.uuid5(uuid.NAMESPACE_URL, f"p16-trace:{trace_id}")
 
 
 def clean_trace_id(value: Any) -> str:

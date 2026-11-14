@@ -2,6 +2,7 @@
 tests for token tracking, the 70% warning, compaction and trace ids (Lab 2, Part 6).
 """
 
+import uuid
 from unittest import TestCase
 
 from app.assistant.context import (
@@ -10,6 +11,7 @@ from app.assistant.context import (
     compact_messages,
     estimate_tokens,
     new_trace_id,
+    trace_uuid,
 )
 
 
@@ -109,9 +111,9 @@ class CompactionTests(TestCase):
 class TraceIdTests(TestCase):
     """verify trace ids are safe to put in logs."""
 
-    def test_new_ids_are_16_hex_characters_and_different(self):
+    def test_new_ids_are_uuids_and_different(self):
         first, second = new_trace_id(), new_trace_id()
-        self.assertEqual(len(first), 16)
+        self.assertEqual(str(uuid.UUID(first)), first)
         self.assertNotEqual(first, second)
 
     def test_safe_value_is_kept(self):
@@ -121,4 +123,10 @@ class TraceIdTests(TestCase):
         for bad in (None, "", "has space", "line\nbreak", "x" * 65, 12345):
             cleaned = clean_trace_id(bad)
             self.assertNotEqual(cleaned, bad)
-            self.assertEqual(len(cleaned), 16)
+            self.assertEqual(str(uuid.UUID(cleaned)), cleaned)
+
+    def test_any_safe_id_maps_to_a_stable_uuid(self):
+        self.assertEqual(trace_uuid("demo-trace-1"), trace_uuid("demo-trace-1"))
+        self.assertNotEqual(trace_uuid("demo-trace-1"), trace_uuid("demo-trace-2"))
+        real = new_trace_id()
+        self.assertEqual(str(trace_uuid(real)), real)

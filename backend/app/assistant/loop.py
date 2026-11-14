@@ -286,8 +286,13 @@ class AssistantLoop:
         history: list[dict[str, Any]] | None = None,
         confirmed_save: bool = False,
         trace_id: str | None = None,
+        memory_context: str | None = None,
     ) -> AssistantRunResult:
-        """run one bounded conversation through Ollama and the manual tools."""
+        """run one bounded conversation through Ollama and the manual tools.
+
+        memory_context is the assistant's standing rules plus the student's saved memory
+        (built by app.assistant.memory); it is added to the system prompt.
+        """
 
         trace_id = clean_trace_id(trace_id)
         tracker = TokenTracker(budget=self.context_budget)
@@ -301,8 +306,11 @@ class AssistantLoop:
                 "compaction": dict(compaction),
             }
 
+        system_prompt = _system_prompt()
+        if memory_context:
+            system_prompt += "\n\n" + memory_context
         messages: list[dict[str, Any]] = [
-            {"role": "system", "content": _system_prompt()},
+            {"role": "system", "content": system_prompt},
         ]
         if history:
             messages.extend(history)
@@ -327,6 +335,10 @@ class AssistantLoop:
                     compaction_info["tokens_after"],
                     trace_id,
                 )
+            # a model call can take a minute. end the open database transaction first so the pooled
+            # connection goes back to the pool while we wait; the session reconnects on its next query.
+            # (found with JMeter: 20+ chats at once held every connection and logins failed with 500.)
+            db.rollback()
             try:
                 response = self._complete(model_messages)
             except OllamaError as error:

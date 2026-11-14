@@ -16,6 +16,12 @@ class Settings(BaseSettings):
     db_user: str
     db_password: str
     db_name: str
+    # connection pool size. a request keeps its connection while it waits for a worker thread, so
+    # the pool has to cover the number of requests in flight (found with JMeter: the SQLAlchemy
+    # default of 5 + 10 ran out with 50 users chatting and requests failed after the 30s timeout).
+    db_pool_size: int = 20
+    db_max_overflow: int = 60
+    db_pool_timeout_seconds: int = 30
 
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"

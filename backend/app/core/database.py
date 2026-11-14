@@ -25,6 +25,9 @@ database_url = URL.create(
 engine = create_engine(
     database_url,
     pool_pre_ping=True,
+    pool_size=settings.db_pool_size,
+    max_overflow=settings.db_max_overflow,
+    pool_timeout=settings.db_pool_timeout_seconds,
 )
 
 

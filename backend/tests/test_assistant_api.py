@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.pool import StaticPool
 
 from app.api.routes import assistant as assistant_route
+from app.assistant import memory as memory_module
 from app.assistant.loop import AssistantRunResult
 from app.core.database import Base
 from app.models.assistant_conversation import AssistantConversation, AssistantMessage
@@ -26,7 +27,7 @@ class FakeAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history, confirmed_save=False, trace_id=None):
+    def run(self, db, student_id, user_message, history, confirmed_save=False, trace_id=None, memory_context=None):
         # return one assistant turn with one logged tool call
         return AssistantRunResult(
             answer="I found a useful opportunity.",
@@ -54,7 +55,7 @@ class RollbackAssistantLoop:
     def __init__(self):
         self.max_iterations = 5
 
-    def run(self, db, student_id, user_message, history, confirmed_save=False, trace_id=None):
+    def run(self, db, student_id, user_message, history, confirmed_save=False, trace_id=None, memory_context=None):
         # simulate the rollback used when a tool fails
         db.rollback()
         return AssistantRunResult(
@@ -167,6 +168,73 @@ class AssistantApiTests(TestCase):
         self.assertIsNotNone(conversation)
         self.assertEqual(conversation.student_id, self.student.id)
         self.assertEqual(response.failure_mode, "database_error")
+
+
+    def test_memory_command_bypasses_the_model_and_is_saved_as_a_turn(self):
+        """answer /memory commands directly and still store the turn."""
+
+        class ExplodingLoop:
+            def __init__(self):
+                raise AssertionError("the model must not run for /memory commands")
+
+        memory_module._fallback_database = None
+        request = AssistantChatRequest(message="/memory add note: likes data jobs")
+        with patch.object(assistant_route, "AssistantLoop", ExplodingLoop):
+            response = assistant_route.chat_with_assistant(
+                request=request,
+                current_user=self.user,
+                db=self.db,
+            )
+
+        self.assertIn("Saved to memory", response.answer)
+        self.assertEqual(response.iterations, 0)
+        self.assertTrue(response.trace_id)
+        stored = list(
+            self.db.scalars(
+                select(AssistantMessage).where(
+                    AssistantMessage.conversation_id == response.conversation_id,
+                )
+            ).all()
+        )
+        self.assertEqual([m.role for m in stored], ["user", "assistant"])
+
+        listing = assistant_route.chat_with_assistant(
+            request=AssistantChatRequest(
+                message="/memory", conversation_id=response.conversation_id
+            ),
+            current_user=self.user,
+            db=self.db,
+        )
+        self.assertIn("likes data jobs", listing.answer)
+
+    def test_normal_messages_get_rules_and_memory_in_the_prompt(self):
+        """pass the standing rules and saved memory to the assistant loop."""
+
+        seen = {}
+
+        class CapturingLoop(FakeAssistantLoop):
+            def run(self, db, student_id, user_message, history, confirmed_save=False,
+                    trace_id=None, memory_context=None):
+                seen["context"] = memory_context
+                seen["trace_id"] = trace_id
+                return super().run(db, student_id, user_message, history)
+
+        memory_module._fallback_database = None
+        memory_module.add_memory(
+            memory_module.get_memory_database(), self.user.id, "preference", "I like remote jobs"
+        )
+        with patch.object(assistant_route, "AssistantLoop", CapturingLoop):
+            response = assistant_route.chat_with_assistant(
+                request=AssistantChatRequest(message="find me a job"),
+                current_user=self.user,
+                db=self.db,
+                x_trace_id="caller-trace-1",
+            )
+
+        self.assertIn("standing rules:", seen["context"])
+        self.assertIn("I like remote jobs", seen["context"])
+        self.assertEqual(seen["trace_id"], "caller-trace-1")
+        self.assertEqual(response.trace_id, "caller-trace-1")
 
 
 if __name__ == "__main__":

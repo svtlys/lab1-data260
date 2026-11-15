@@ -1,0 +1,38 @@
+AWS Phase 2A report
+Project: C:\Projects\lab1-data260-alyssa-sync
+Profile: p16-lab2
+Region: us-east-1
+Cluster target: p16-lab2-eks
+Date: 2026-11-15
+
+Read-only validation
+- Configuration structure: valid managed-node-group fields detected.
+- Pair16EKSDeployTemporary attached: yes.
+- Default policy version: v3.
+- iam:CreateServiceLinkedRole condition values for eks.amazonaws.com, eks-nodegroup.amazonaws.com, and autoscaling.amazonaws.com: present.
+- eks-nodegroup.amazonaws.com service-linked-role simulation: allowed.
+- Prohibited NAT, ELB, database, MSK, Fargate, and deletion simulations: denied.
+- EKS cluster status: ACTIVE.
+- Existing node groups: 0.
+- NAT Gateways: 0.
+- Load balancers: 0.
+
+Controlled node-group retry
+- The approved verbose eksctl create nodegroup command was run once against the existing cluster.
+- Invocation used the verified eksctl executable, the approved config file, a temporary KUBECONFIG outside the repository, and separate stdout/stderr capture.
+- Result: failed, exit code 1.
+- Captured stdout: 33,196 bytes; captured stderr: 0 bytes.
+- The nodegroup stack was created and eksctl waited for StackCreateComplete.
+- Exact final error: exceeded max wait time for StackCreateComplete waiter.
+- eksctl reported that the nodegroup was not created properly and suggested checking CloudFormation; no cleanup command was run.
+- A read-only status check during the wait showed the requested nodegroup name in the cluster nodegroup list; completion was not treated as success because the command exited 1.
+
+Safety
+- No automatic retry, cleanup, deletion, or IAM policy change was performed.
+- No post-failure provisioning or cleanup command was run.
+- No application, database, Kafka, LoadBalancer, NAT Gateway, Fargate, RDS, DocumentDB, MSK, or unrelated resource was intentionally created by this step.
+- The sanitized configuration remains in p16-lab2-eks-config.yaml.
+- No screenshot was captured.
+
+Blocker
+- The managed nodegroup attempt failed at the CloudFormation waiter timeout. Do not retry or clean up automatically; inspect the resulting CloudFormation stack read-only before any further action.

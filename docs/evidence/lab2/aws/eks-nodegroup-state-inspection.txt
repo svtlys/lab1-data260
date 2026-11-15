@@ -1,0 +1,66 @@
+aws eks node-group state inspection
+project: C:\Projects\lab1-data260-alyssa-sync
+profile: p16-lab2
+region: us-east-1
+cluster: p16-lab2-eks
+node group: p16-lab2-workers
+date: 2026-11-15
+
+classification
+- node group failed with a specific AWS reason
+
+eks
+- cluster status: ACTIVE
+- node-group list: p16-lab2-workers
+- node-group status: CREATE_FAILED
+- health code: AsgInstanceLaunchFailures
+- health message: Could not launch On-Demand Instances. InvalidParameterCombination: the specified instance type is not eligible for Free Tier. The launch failed.
+- requested node group capacity remained 2/2/2 with the configured t3.medium type.
+
+cloudformation
+- stack: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+- stack status: ROLLBACK_FAILED
+- stack status reason: the ManagedNodeGroup resource failed to delete.
+- first underlying create failure: ManagedNodeGroup CREATE_FAILED because the configured instance type was not eligible for Free Tier; error code AsgInstanceLaunchFailures.
+- rollback failure: ManagedNodeGroup DELETE_FAILED because the current identity was not authorized for eks:DeleteNodegroup.
+
+all observed stack events, oldest to newest
+- stack CREATE_IN_PROGRESS: user initiated.
+- NodeInstanceRole CREATE_IN_PROGRESS.
+- LaunchTemplate CREATE_IN_PROGRESS.
+- NodeInstanceRole CREATE_IN_PROGRESS: resource creation initiated.
+- LaunchTemplate CREATE_IN_PROGRESS: resource creation initiated.
+- LaunchTemplate CREATE_COMPLETE.
+- NodeInstanceRole CREATE_COMPLETE.
+- ManagedNodeGroup CREATE_IN_PROGRESS.
+- ManagedNodeGroup CREATE_IN_PROGRESS: resource creation initiated.
+- ManagedNodeGroup CREATE_FAILED: AsgInstanceLaunchFailures; the configured instance type was not eligible for Free Tier.
+- stack ROLLBACK_IN_PROGRESS: ManagedNodeGroup failed to create.
+- ManagedNodeGroup DELETE_IN_PROGRESS.
+- ManagedNodeGroup DELETE_FAILED: eks:DeleteNodegroup was not authorized.
+- stack ROLLBACK_FAILED: ManagedNodeGroup failed to delete.
+
+ec2 residual-resource audit
+- matching EC2 instances: 0
+- matching Auto Scaling groups: 1
+  - name: eks-p16-lab2-workers-ecd0ef80-5c14-1ec2-3873-520860c2c316
+  - desired/min/max: 2/2/2
+  - registered instances: 0
+- matching launch templates: 1
+  - name: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+  - default version: 1
+- matching network interfaces: 0
+- matching EBS volumes: 0
+- matching node-group-specific security groups: 0
+- existing cluster security groups were present and unchanged.
+
+network and workload checks
+- NAT Gateways: 0
+- LoadBalancers: 0
+- Kubernetes pods in all namespaces: none found
+- no application, database, or Kafka pods were deployed.
+
+safety
+- inspection was read-only.
+- no retry, deletion, cleanup, IAM change, cluster update, or application deployment was performed.
+- account IDs, ARNs, IP addresses, credentials, tokens, and secrets were omitted.

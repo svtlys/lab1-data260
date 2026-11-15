@@ -1,0 +1,33 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: p16-lab2-eks
+  region: us-east-1
+  tags:
+    Project: p16-lab2
+    Owner: vrishin
+    Environment: temporary
+    AutoDelete: p16-lab2
+
+vpc:
+  nat:
+    gateway: Disable
+
+iam:
+  withOIDC: false
+
+managedNodeGroups:
+  - name: p16-lab2-workers
+    instanceType: t3.medium
+    minSize: 2
+    desiredCapacity: 2
+    maxSize: 2
+    privateNetworking: false
+    volumeType: gp3
+    volumeSize: 20
+    tags:
+      Project: p16-lab2
+      Owner: vrishin
+      Environment: temporary
+      AutoDelete: p16-lab2

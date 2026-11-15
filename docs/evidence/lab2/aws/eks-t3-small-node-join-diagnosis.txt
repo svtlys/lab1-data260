@@ -1,0 +1,63 @@
+read-only t3.small node-join diagnosis
+project: Pair 16 Lab 2
+profile: p16-lab2
+region: us-east-1
+cluster: p16-lab2-eks
+node group: p16-lab2-workers
+date: 2026-11-15
+
+root cause
+- Both instances registered as Kubernetes nodes but remained Ready=False.
+- Exact node condition: KubeletNotReady.
+- Exact message: container runtime network not ready; NetworkPluginNotReady; CNI plugin not initialized.
+- The cluster has zero EKS add-ons.
+- The cluster has no kube-system pods and no DaemonSets, including no aws-node CNI DaemonSet.
+- This is the first concrete join failure evidence and identifies the missing/uninitialized VPC CNI path.
+
+eks and cloudformation evidence
+- node-group status: CREATE_FAILED.
+- health code: NodeCreationFailure.
+- health message: Unhealthy nodes in the kubernetes cluster.
+- node-group version: 1.34.
+- AMI type: AL2023_x86_64_STANDARD.
+- instance type: t3.small.
+- scaling: min/desired/max 2/2/2.
+- CloudFormation has no earlier resource failure than ManagedNodeGroup CREATE_FAILED with NodeCreationFailure.
+- rollback is ROLLBACK_FAILED because eks:DeleteNodegroup was denied.
+- node-group update history: none.
+
+ec2 and network evidence
+- two t3.small instances were running.
+- both system status and instance status checks were ok.
+- both instances had public IP assignments and were in the two configured worker subnets in the same VPC.
+- both worker subnet route tables had an active 0.0.0.0/0 route through the attached internet gateway.
+- the worker security group had all-protocol communication from the worker and cluster security groups and unrestricted egress; no obvious security-group or route block was observed.
+- two in-use gp3 20 GiB volumes existed.
+- two worker ENIs existed.
+
+launch template and bootstrap evidence
+- launch template existed with one security-group reference and one block-device mapping.
+- launch-template user-data field: not present in the returned metadata.
+- launch-template IAM instance-profile field: not present in the returned metadata; the instances did have an instance profile attached.
+- no user-data contents were printed or saved.
+
+iam evidence
+- exact node role: eksctl-p16-lab2-eks-nodegroup-p16--NodeInstanceRole-XwjlOOrb6JeS
+- attached policies: AmazonSSMManagedInstanceCore, AmazonEKS_CNI_Policy, AmazonEKSWorkerNodePolicy, AmazonEC2ContainerRegistryPullOnly.
+- inline policies: none.
+- read-only PassRole simulation for the exact node role: allowed.
+- IAM policy absence is not supported as the primary cause by this evidence.
+
+kubernetes evidence
+- node count: 2.
+- both nodes reported instance type t3.small.
+- both nodes Ready=False with KubeletNotReady.
+- both nodes had the node.kubernetes.io/not-ready taint.
+- kube-system pods: none found.
+- DaemonSets across namespaces: none found.
+- events included InvalidDiskCapacity with image filesystem capacity 0, but DiskPressure was False; the decisive readiness message was CNI plugin not initialized.
+
+conclusion
+- The evidence points to a missing/uninitialized EKS VPC CNI add-on/DaemonSet, not an instance-type, IAM, route, internet-gateway, security-group, or endpoint-authentication failure.
+- No repair, retry, cleanup, IAM change, manifest apply, or application deployment was performed.
+- Account IDs, ARNs, IP addresses, credentials, tokens, and user-data contents were omitted.

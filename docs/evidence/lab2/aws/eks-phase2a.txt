@@ -36,3 +36,31 @@ Safety
 
 Blocker
 - The managed nodegroup attempt failed at the CloudFormation waiter timeout. Do not retry or clean up automatically; inspect the resulting CloudFormation stack read-only before any further action.
+
+t3.small node-group creation attempt
+- The validated t3.small configuration was used.
+- The approved eksctl create nodegroup command was run exactly once with a temporary external KUBECONFIG and separate stdout/stderr capture.
+- Result: failed, exit code 1.
+- Captured stdout: 32,330 bytes; captured stderr: 0 bytes.
+- Exact observed error: exceeded max wait time for StackCreateComplete waiter.
+- Read-only CloudFormation inspection showed LaunchTemplate CREATE_COMPLETE, NodeInstanceRole CREATE_COMPLETE, and ManagedNodeGroup CREATE_IN_PROGRESS; no underlying CREATE_FAILED event was present at inspection time.
+- No retry, deletion, cleanup, IAM change, or t3.small recreation was performed.
+
+t3.small state inspection
+- The existing t3.small stack was monitored read-only for 13 polling cycles.
+- Final classification: ROLLBACK_FAILED.
+- First underlying AWS failure: ManagedNodeGroup CREATE_FAILED with NodeCreationFailure; the nodes were unhealthy in the Kubernetes cluster.
+- Two t3.small worker instances were observed running, with two ENIs and two in-use gp3 20 GiB volumes.
+- The associated Auto Scaling group was observed with desired/min/max capacity 2/2/2.
+- Rollback then failed because the current identity was not authorized for eks:DeleteNodegroup.
+- NAT Gateways: 0. LoadBalancers: 0.
+- No retry, deletion, cleanup, IAM change, or cluster recreation was performed.
+
+t3.small node-join diagnosis
+- Both t3.small instances registered as nodes but were Ready=False with KubeletNotReady.
+- Exact readiness message: NetworkPluginNotReady; CNI plugin not initialized.
+- EKS add-ons: 0. kube-system pods: none. DaemonSets: none, including no aws-node CNI DaemonSet.
+- Both EC2 system and instance status checks were ok.
+- Both worker subnet default routes were active through the attached internet gateway.
+- The node role had AmazonEKS_CNI_Policy, AmazonEKSWorkerNodePolicy, AmazonEC2ContainerRegistryPullOnly, and AmazonSSMManagedInstanceCore; read-only PassRole simulation was allowed.
+- The first concrete join cause is the missing/uninitialized VPC CNI path. No repair or retry was performed.

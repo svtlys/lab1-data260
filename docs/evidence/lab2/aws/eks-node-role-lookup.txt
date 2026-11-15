@@ -1,0 +1,12 @@
+EKS node IAM role lookup
+profile: p16-lab2
+region: us-east-1
+stack: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+logical resource ID: NodeInstanceRole
+
+- ResourceType: AWS::IAM::Role
+- PhysicalResourceId: eksctl-p16-lab2-eks-nodegroup-p16--NodeInstanceRole-kDoVByBvrhmr
+- IAM role name: eksctl-p16-lab2-eks-nodegroup-p16--NodeInstanceRole-kDoVByBvrhmr
+- IAM get-role confirmation: succeeded
+
+Only read-only CloudFormation and IAM commands were run. No policy, role, stack, or AWS resource was modified.

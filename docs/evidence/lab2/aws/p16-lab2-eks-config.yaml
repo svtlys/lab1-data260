@@ -19,7 +19,7 @@ iam:
 
 managedNodeGroups:
   - name: p16-lab2-workers
-    instanceType: t3.medium
+    instanceType: t3.small
     minSize: 2
     desiredCapacity: 2
     maxSize: 2

@@ -1,0 +1,23 @@
+aws EKS instance-type configuration update
+project: Pair 16 Lab 2
+date: 2026-11-15
+
+change
+- The previous t3.medium managed-node-group attempt failed because the AWS account rejected that instance type under its Free Tier restriction.
+- Handshake_Lab2.pdf does not require t3.medium or exactly two worker nodes.
+- The active planned instance type is now t3.small.
+- The planned worker count remains 2, with min/desired/max capacity 2/2/2.
+
+preserved configuration
+- cluster: p16-lab2-eks
+- region: us-east-1
+- managed node group: p16-lab2-workers
+- networking: public workers, NAT Gateway disabled
+- root volume: gp3, approximately 20 GiB
+- Pair 16 temporary tags preserved
+
+safety
+- This was a local configuration edit only.
+- No AWS resources were changed.
+- Historical evidence reports were not rewritten.
+- No cluster or node group command was run.

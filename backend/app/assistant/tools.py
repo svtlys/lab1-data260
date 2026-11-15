@@ -16,6 +16,7 @@ from typing import Any
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from app.assistant.guards import normalize_job_search_args
 from app.models.event import Event
 from app.models.job import Job
 from app.models.saved_item import SavedItem
@@ -156,6 +157,12 @@ def search_jobs(
 
     if limit < 1 or limit > 50:
         raise AssistantToolError("limit must be between 1 and 50")
+
+    query, employment_type, is_remote = normalize_job_search_args(
+        query,
+        employment_type,
+        is_remote,
+    )
 
     statement = select(Job)
 

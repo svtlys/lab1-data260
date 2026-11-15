@@ -1,0 +1,46 @@
+harness remote-filter fix
+date: 2026-11-14
+
+root cause
+- production filtering bug, not an incorrect harness fixture
+- app.assistant.guards.normalize_job_search_args already recognized remote aliases
+- app.assistant.tools.search_jobs did not call that normalizer
+- employment_type=remote was therefore compared literally against Job.employment_type and returned no rows
+- the harness fixture contains a real in-memory remote job, so its expectation was valid
+
+changed files
+- backend/app/assistant/tools.py
+- backend/tests/test_assistant_tools.py
+
+implementation
+- search_jobs now applies normalize_job_search_args before constructing its SQL query
+- existing canonical employment types, query filters, city filters, required-skill filters, limits, and MySQL/Mongo routing behavior remain unchanged
+- no assistant route, schema, frontend, Mongo, Kafka, Docker, Kubernetes, or AWS files changed
+
+focused job tests
+- command: python -B -m unittest tests.test_jobs -v
+- result: 15 tests passed
+
+focused assistant/tool tests
+- command: python -B -m unittest tests.test_assistant_tools tests.test_assistant_loop tests.test_context tests.test_memory tests.test_prompt_injection -v
+- result: 66 tests passed
+
+harness tests
+- command: python -B -m unittest tests.test_agent_harness -v
+- result: 2 tests passed
+- harness case assertion: 20 total, 20 passed, 0 failed
+
+full backend suite
+- command: python -B -m unittest discover -s tests -p test_*.py
+- result: 280 tests passed
+
+compilation and diff checks
+- in-memory Python compilation of app/assistant/tools.py and tests/test_assistant_tools.py: passed
+- git diff --check: passed
+
+safety
+- no Ollama, AWS, JMeter, Kafka publishing, migration, Kubernetes, or external service operation was run
+- no files were staged, committed, or pushed
+
+screenshot
+- not captured by the available tools

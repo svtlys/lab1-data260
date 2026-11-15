@@ -108,6 +108,28 @@ class AssistantToolTests(TestCase):
         self.assertEqual(jobs[0]["id"], self.job.id)
         self.assertEqual(details["title"], "Test Python Internship")
 
+    def test_search_jobs_normalizes_remote_employment_type(self):
+        """treat remote as the remote flag rather than a job type."""
+
+        remote_job = Job(
+            title="Test Remote Analyst",
+            description="Analyze data from home.",
+            company_name="Remote Test Labs",
+            location="Remote",
+            city="Cupertino",
+            employment_type="full-time",
+            is_remote=True,
+            required_skills="SQL",
+            posted_at=datetime(2026, 10, 2, 9, 0),
+        )
+        self.db.add(remote_job)
+        self.db.commit()
+
+        jobs = json.loads(search_jobs(self.db, employment_type="remote"))
+
+        self.assertEqual([job["title"] for job in jobs], ["Test Remote Analyst"])
+        self.assertTrue(jobs[0]["is_remote"])
+
     def test_search_events(self):
         """find events using city and virtual filters."""
 

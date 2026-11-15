@@ -1,0 +1,50 @@
+Saturday source integration
+date: 2026-11-14
+
+files copied from the clean partner clone
+- loadtest/.gitignore
+- loadtest/README.md
+- loadtest/apply.jmx
+- loadtest/assistant.jmx
+- loadtest/job_search.jmx
+- loadtest/login.jmx
+- loadtest/make_plans.py
+- loadtest/run_tests.sh
+- loadtest/summarize.py
+- loadtest/restart_backend.sh
+
+files intentionally excluded
+- backend/scripts/agent_harness.py: excluded because it passes unsupported memory_context to the current AssistantLoop.run and requires manual assistant-loop integration
+- agent_harness.json: generated output
+- backend/tests/test_agent_harness.py: local failed-run test, not present as a focused partner test
+- docs/loadtest_*.json, docs/loadtest_*.md, docs/loadtest_*.png: generated results/evidence
+- docs/live_*.json, docs/live_*.md, docs/live_*transcripts.md: generated reliability evidence
+- loadtest/resume.pdf: private-upload-style fixture
+- backend/scripts/live_reliability_run.py: excluded pending separate credential-like assignment review
+- AI_USE.md, METRICS.md, RUN_LOG.txt, protected Lab 1 reports/evidence, .env files, and seed SQL: excluded
+
+compatibility and safety review
+- all copied destination paths were absent before copying
+- copied files are additive load-test plans, documentation, or helper source
+- make_plans.py uses Python standard-library imports and contains a deterministic test-fixture password assignment; the value was not printed
+- summarize.py imports matplotlib plus Python standard-library modules; it was not executed
+- no AWS, Kafka, database, or external-system operation was run
+- no credential-bearing URL, AWS key, private key, JWT-like token, or private upload was copied
+
+validation results
+- in-memory Python compilation: passed for loadtest/make_plans.py and loadtest/summarize.py
+- JMX/XML validation: passed for all four plans; each contains one TestPlan node
+- bash -n: passed for run_tests.sh and restart_backend.sh
+- git diff --check: passed
+- focused load-test unit tests: none were present
+- JMeter was not run
+- harness was not run because of the unsupported current-loop argument
+- no files were staged, committed, or pushed
+
+git state
+- copied files appear as untracked loadtest paths only
+- no staged files were present
+- existing untracked Lab 1 evidence, seed SQL, reports, and drafts were not moved or modified
+
+screenshot
+- not captured by the available tools

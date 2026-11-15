@@ -1,0 +1,61 @@
+AWS managed node-group diagnosis
+Project: C:\Projects\lab1-data260-alyssa-sync
+Profile: p16-lab2
+Region: us-east-1
+Cluster: p16-lab2-eks
+Date: 2026-11-15
+
+EKS state
+- Cluster status: ACTIVE.
+- Node-group count: 0.
+- Cluster update count: 0.
+- No failed node-group details are available from EKS because no node group exists.
+
+CloudFormation state
+- Matching stack count: 1.
+- Stack status: CREATE_COMPLETE.
+- Stack resource count: 22.
+- All inspected stack resources are CREATE_COMPLETE.
+- No stack failure or rollback events were present.
+- No node-group stack was present.
+
+Exact denied action available in audit evidence
+- CloudTrail contains AccessDenied for iam:CreateServiceLinkedRole at 2026-11-15T10:50:47Z (UTC).
+- The event contains no usable service-name request parameter.
+- This event is from the earlier cluster-creation timeframe; the available evidence does not prove it caused the later node-group command failure.
+
+EC2 and node-group residuals
+- Pair 16 EC2 instances: 0.
+- Pair 16 launch templates: 0.
+- Pair 16 network interfaces: 0.
+- Pair 16 volumes: 0.
+- Matching Auto Scaling groups: 0.
+- Pair 16 security groups: 2.
+- Pair 16 VPCs: 1.
+- Pair 16 subnets: 4.
+
+IAM state
+- Matching IAM role count: 1, the existing cluster service role.
+- Existing cluster role policies: AmazonEKSClusterPolicy and AmazonEKSVPCResourceController.
+- No node IAM role was created.
+- No node role is referenced in the configuration.
+- PassRole simulation against the existing cluster role: allowed.
+- Node-role PassRole could not be tested because no node role exists.
+
+Configuration inspection
+- Cluster name: p16-lab2-eks.
+- Node-group name: p16-lab2-workers.
+- Instance type: t3.medium.
+- Capacity: min 2, desired 2, max 2.
+- Networking: public workers via privateNetworking false.
+- Root volume: gp3, 20 GiB.
+- NAT: disabled.
+- Explicit subnet list: absent; eksctl selects the existing cluster subnets.
+- Explicit node role ARN: absent.
+
+Conclusion
+- The latest node-group failure cannot be attributed to CloudFormation, a node role, PassRole, subnet/networking, launch-template, or EC2 from the available evidence because no node-group API/stack or failure event exists.
+- The only exact denied action found is iam:CreateServiceLinkedRole from the earlier cluster-creation timeframe; attributing it to the later node-group failure would be speculation.
+- The generic eksctl error was not retained, so the exact latest cause is undetermined.
+- No retry, cleanup, IAM change, kubeconfig creation, or AWS resource modification was performed.
+- No account ID, ARN, IP address, credential, password, token, or raw event was saved.

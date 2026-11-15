@@ -1,0 +1,134 @@
+EKS cleanup permission preflight
+project: Pair 16 Lab 2
+profile: p16-lab2
+region: us-east-1
+cluster: p16-lab2-eks
+node group: p16-lab2-workers
+date: 2026-11-15
+
+result
+- cleanup was not attempted.
+- the current principal is p16-lab2-deployer.
+- Pair16EKSDeployTemporary is attached at default version v3.
+- IAM simulation returned implicitDeny for iam:CreatePolicyVersion.
+- IAM simulation returned implicitDeny for iam:SetDefaultPolicyVersion.
+- The current principal therefore cannot add the temporary cleanup permissions.
+- No AWS resource, IAM policy, cluster, node group, ASG, launch template, or stack was modified.
+
+failed resources identified from the approved plan
+- node group: p16-lab2-workers
+- node-group identifier suffix: ecd0ef80-5c14-1ec2-3873-520860c2c316
+- CloudFormation stack: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+- Auto Scaling group: eks-p16-lab2-workers-ecd0ef80-5c14-1ec2-3873-520860c2c316
+- launch template: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+- launch template ID: lt-02af50d3019252b8e
+
+temporary policy JSON for manual attachment
+- Replace <account-id> with the account ID privately before attachment. Do not commit the expanded policy to Git.
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DeleteFailedNodeGroup",
+      "Effect": "Allow",
+      "Action": "eks:DeleteNodegroup",
+      "Resource": "arn:aws:eks:us-east-1:<account-id>:nodegroup/p16-lab2-eks/p16-lab2-workers/ecd0ef80-5c14-1ec2-3873-520860c2c316"
+    },
+    {
+      "Sid": "DeleteFailedStack",
+      "Effect": "Allow",
+      "Action": "cloudformation:DeleteStack",
+      "Resource": "arn:aws:cloudformation:us-east-1:<account-id>:stack/eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers/*"
+    },
+    {
+      "Sid": "DeleteEmptyAutoScalingGroup",
+      "Effect": "Allow",
+      "Action": "autoscaling:DeleteAutoScalingGroup",
+      "Resource": "arn:aws:autoscaling:us-east-1:<account-id>:autoScalingGroup:*:autoScalingGroupName/eks-p16-lab2-workers-ecd0ef80-5c14-1ec2-3873-520860c2c316"
+    },
+    {
+      "Sid": "DeleteFailedLaunchTemplate",
+      "Effect": "Allow",
+      "Action": "ec2:DeleteLaunchTemplate",
+      "Resource": "arn:aws:ec2:us-east-1:<account-id>:launch-template/lt-02af50d3019252b8e"
+    },
+    {
+      "Sid": "ReadCleanupState",
+      "Effect": "Allow",
+      "Action": [
+        "eks:DescribeCluster",
+        "eks:ListNodegroups",
+        "eks:DescribeNodegroup",
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:ListStackResources",
+        "autoscaling:DescribeAutoScalingGroups",
+        "ec2:DescribeLaunchTemplates",
+        "ec2:DescribeInstances",
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeVolumes"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+
+manual cleanup order after temporary permission attachment
+1. Verify the failed node group and stack are still the identified resources.
+2. Delete only the failed node group and wait for its absence.
+3. Delete only the failed CloudFormation stack.
+4. If the empty ASG remains, delete only the identified ASG.
+5. If the launch template remains, delete only the identified launch template.
+6. Verify the EKS cluster remains ACTIVE and the VPC, subnets, internet gateway, and unrelated resources remain intact.
+7. Detach or remove the temporary cleanup policy immediately after verification.
+
+safety
+- No t3.small node group was created.
+- No cluster creation command was run.
+- No cleanup command was run because IAM modification was not available to the current principal.
+- Account IDs, concrete ARNs, IP addresses, credentials, tokens, and secrets were not saved.
+
+approved cleanup attempt
+- Temporary policy attachment validation: passed.
+- Live identifier comparison: passed.
+- Failed node-group deletion: succeeded.
+- Read-only node-group deletion wait: succeeded; p16-lab2-workers was deleted.
+- Failed CloudFormation stack deletion: failed, exit code 254.
+- Exact sanitized error: the stack cannot be deleted while TerminationProtection is enabled.
+- Per the stop-on-failure instruction, no termination-protection change, stack retry, ASG deletion, or launch-template deletion was performed.
+- The EKS cluster, VPC, subnets, internet gateway, IAM policies, and unrelated resources were not modified.
+
+termination-protection cleanup attempt
+- Temporary cleanup policy attachment: verified.
+- Stack termination protection before change: enabled.
+- Termination protection was disabled only for eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers.
+- CloudFormation delete request: accepted.
+- Stack deletion wait: failed because the stack entered DELETE_FAILED.
+- Exact failure: the stack-owned NodeInstanceRole could not be deleted because iam:DetachRolePolicy was denied.
+- ManagedNodeGroup: DELETE_COMPLETE.
+- LaunchTemplate: DELETE_COMPLETE through the stack deletion attempt.
+- Empty Auto Scaling group: absent before this step; no ASG deletion was issued.
+- No retry, IAM change, role deletion, or additional cleanup was performed after the failure.
+- The EKS cluster was not deleted or modified.
+
+final cleanup completion
+- Updated temporary cleanup policy attachment: verified.
+- Failed stack and role identifiers: verified before cleanup.
+- Policies detached from the exact NodeInstanceRole: four attached AWS-managed policies; no inline policies existed.
+- Exact NodeInstanceRole deletion: succeeded.
+- CloudFormation stack deletion retry: accepted and completed successfully.
+- Failed stack: absent.
+- NodeInstanceRole: absent.
+- Failed-attempt launch templates: 0.
+- Failed-attempt Auto Scaling groups: 0.
+- EKS cluster status: ACTIVE.
+- EKS node groups: 0.
+- EC2 instances: 0.
+- ENIs: 0.
+- EBS volumes: 0.
+- NAT Gateways: 0.
+- LoadBalancers: 0.
+- Kubernetes pod count across all namespaces: 0.
+- The t3.small node group was not created.
+- The temporary cleanup policy remains attached for manual administrator detachment as requested.

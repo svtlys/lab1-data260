@@ -1,0 +1,44 @@
+eksctl command-invocation diagnosis
+Project: C:\Projects\lab1-data260-alyssa-sync
+Date: 2026-11-15
+
+Local executable
+- Exact eksctl.exe exists: yes.
+- eksctl version: 0.231.0.
+- Direct version invocation exit code: 0.
+- Direct help invocation exit code: 0.
+- `eksctl create nodegroup --help` output confirms --config-file, --profile, --region, and node-group flags.
+- `eksctl create nodegroup --help` does not define a --kubeconfig flag.
+
+Configuration
+- Configuration file exists and is readable.
+- YAML parse: success using the available Python YAML parser.
+- Cluster: p16-lab2-eks.
+- Region: us-east-1.
+- Managed node group: p16-lab2-workers.
+- Instance type: t3.medium.
+- Capacity: min 2, desired 2, max 2.
+- Public networking: privateNetworking false.
+- Root volume: gp3, 20 GiB.
+- NAT: disabled.
+
+Read-only AWS state
+- Cluster status: ACTIVE.
+- Existing node groups: 0.
+- NAT Gateways: 0.
+- Load balancers: 0.
+
+Root cause
+- The previous node-group command included the unsupported `--kubeconfig` flag.
+- This is a local command-invocation error, not an invalid executable, missing configuration file, or invalid YAML error.
+- The previous merged PowerShell `*>` capture produced an empty log. Separate native stdout/stderr redirection with `1>` and `2>` captures eksctl output correctly; this was a logging-method limitation.
+- No AWS provisioning call was made by the diagnosed invalid invocation.
+
+Correct local handling for a future approved attempt
+- Omit `--kubeconfig` from `eksctl create nodegroup`; use the supported `--config-file`, `--cluster`, `--region`, and `--profile` options.
+- Set a temporary KUBECONFIG only for subsequent kubectl verification, outside the repository.
+
+Safety
+- No AWS resource, IAM policy, kubeconfig, or repository source file was modified by this diagnosis.
+- No node-group creation was retried.
+- No account ID, ARN, IP address, credential, password, token, or secret was saved.

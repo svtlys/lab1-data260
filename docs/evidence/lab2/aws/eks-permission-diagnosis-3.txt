@@ -1,0 +1,51 @@
+AWS EKS permission diagnosis 3
+Project: C:\Projects\lab1-data260-alyssa-sync
+Profile: p16-lab2
+Region: us-east-1
+Cluster target: p16-lab2-eks
+Date: 2026-11-15
+
+Actual failed action
+- CloudTrail contains an AccessDenied event for iam:CreateServiceLinkedRole.
+- The denied event does not expose a service-name request parameter.
+- No CloudFormation failure events were present.
+- No CreateNodegroup error event was present in the available CloudTrail history.
+
+Residual resources after the failed command
+- EKS cluster status: ACTIVE.
+- Node-group count: 0.
+- Matching CloudFormation stack: CREATE_COMPLETE.
+- Stack resources: 22 completed resources, including one EKS cluster, one VPC, four subnets, security groups, routes, an Internet Gateway, route tables, and an IAM role.
+- Pair 16 EC2 instances: 0.
+- Pair 16 NAT Gateways: 0.
+- Pair 16 load balancers: 0.
+- Pair 16 EBS volumes: 0.
+- Pair 16 security groups: 2.
+- Pair 16 VPCs: 1.
+- Pair 16 subnets: 4.
+
+Policy state
+- Pair16EKSDeployTemporary is attached to p16-lab2-deployer.
+- Default policy version: v2.
+- Required iam:CreateServiceLinkedRole action is present.
+- Policy has no explicit Deny statement.
+- Matching role ARN simulations for CreateRole, AttachRolePolicy, PutRolePolicy, PassRole, and TagRole: allowed.
+- Matching instance-profile ARN simulations: allowed.
+- iam:CreateServiceLinkedRole with eks.amazonaws.com context: allowed.
+- iam:CreateServiceLinkedRole with ec2.amazonaws.com context: implicit deny.
+
+Diagnosis
+- The policy is attached to the correct user and is not stale.
+- The exact failure is not a missing iam:CreateServiceLinkedRole action; it is an AccessDenied result while evaluating that action.
+- The evidence is consistent with the policy’s existing service-name Condition not matching the service requested by eksctl, but the denied CloudTrail event does not reveal that requested service name.
+
+Required policy correction
+- Review and narrowly extend the existing iam:CreateServiceLinkedRole service-name Condition to the actual service name from a future sanitized request/error record.
+- Do not broaden the action to all services and do not add NAT, ELB, database, MSK, Fargate, or deletion permissions.
+- No IAM policy change was made during this diagnosis.
+
+Safety
+- No AWS resource was created, modified, deleted, or cleaned up during this diagnosis.
+- No eksctl command or kubeconfig creation was run.
+- No account ID, ARN, IP address, credential, password, token, or raw policy JSON was saved.
+- No screenshot was captured.

@@ -1,0 +1,43 @@
+read-only t3.small node-group state inspection
+project: Pair 16 Lab 2
+profile: p16-lab2
+region: us-east-1
+cluster: p16-lab2-eks
+node group: p16-lab2-workers
+date: 2026-11-15
+
+classification
+- ROLLBACK_FAILED
+
+eks
+- cluster status: ACTIVE
+- node-group list: p16-lab2-workers
+- node-group status: CREATE_FAILED
+- health code: NodeCreationFailure
+- first underlying AWS reason: Unhealthy nodes in the kubernetes cluster.
+- observed worker instance type: t3.small
+- observed worker instances: 2, both reported running during inspection.
+
+cloudformation
+- stack: eksctl-p16-lab2-eks-nodegroup-p16-lab2-workers
+- final stack status: ROLLBACK_FAILED
+- CREATE_FAILED event: ManagedNodeGroup failed with NodeCreationFailure because the nodes were unhealthy.
+- rollback DELETE_FAILED event: the current identity was not authorized for eks:DeleteNodegroup.
+- stack resources at inspection:
+  - LaunchTemplate: CREATE_COMPLETE
+  - ManagedNodeGroup: DELETE_FAILED
+  - NodeInstanceRole: CREATE_COMPLETE
+
+residual infrastructure observed
+- Auto Scaling group: present with desired/min/max 2/2/2 and 2 registered instances.
+- launch template: present, default version 1.
+- network interfaces: 2.
+- EBS volumes: 2 in-use gp3 volumes, 20 GiB each.
+- NAT Gateways: 0.
+- LoadBalancers: 0.
+
+monitoring
+- The existing stack was polled read-only for 13 polling cycles while it was in progress.
+- No eksctl retry, node-group creation retry, deletion, cleanup, IAM change, or cluster recreation was performed.
+- Because the terminal state was failure, ACTIVE-state node readiness and workload-pod verification were not claimed.
+- Account IDs, ARNs, IP addresses, credentials, tokens, and secrets were omitted.

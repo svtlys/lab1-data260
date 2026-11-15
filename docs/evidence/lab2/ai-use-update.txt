@@ -1,0 +1,23 @@
+AI_USE.md update report
+Date: 2026-11-14
+
+Changed file
+- AI_USE.md only.
+- Existing file content was preserved; line endings were normalized in this file so the content diff is clean.
+
+Added sections
+- Under ## Example of an incorrect assistant suggestion:
+  - ### Vrishin — Lab 2 example
+  - documented the unsupported delivery_timeout_ms Kafka producer setting and the resulting pre-publish memory-demo failure.
+- Under ## How the error was detected and corrected:
+  - ### Vrishin — Lab 2 example
+  - documented sanitized error inspection, removal of the unsupported setting, rerun, successful p16.memory.consolidate publication and processing, duplicate removal, contradiction resolution, and zero consumer lag.
+- Under ## Vrishin's Contribution:
+  - added that the Windows PowerShell .venv\\Scripts\\python.exe workflow is Vrishin's development workflow.
+
+Validation
+- git diff --check: passed.
+- The tracked changed-file list from this edit contains only AI_USE.md.
+- No passwords, tokens, API keys, account identifiers, or private development-history details were added.
+- No files were staged, committed, or pushed.
+- No source, database, container, or Git-history changes were made.

@@ -30,13 +30,17 @@ A patch Claude gave me for a React page emptied `MyApplications.jsx`. Claude fir
 
 **Lab 1.** One incorrect result occurred when the assistant produced an empty final response after successfully calling the event-search tool.
 
+### Vrishin — Lab 2 example
+
+Incorrect result: Kafka publishing failed because the producer configuration included `delivery_timeout_ms`, which the installed kafka-python package rejected as unsupported. The memory demonstration failed before the Kafka message was sent.
+
 During reliability testing, the first direct command to run the experiment script was treated as ready to use from the backend folder:
 
 ```powershell
 .\.venv\Scripts\python.exe scripts\reliability_experiment.py
 ```
 
-The script initially failed with `ModuleNotFoundError: No module named 'app'`. This showed that the direct script entry point did not yet set the backend import path correctly.
+The script initially failed with `ModuleNotFoundError: No module named 'app'`. This showed that the direct script entry point did not yet set the backend import path correctly. The Windows PowerShell `.venv\Scripts\python.exe` workflow is Vrishin's development workflow.
 
 ## 3. How was the error detected and corrected?
 
@@ -51,6 +55,10 @@ The script initially failed with `ModuleNotFoundError: No module named 'app'`. T
 **Lab 2:** <to be added: how the Lab 2 example was detected and corrected>
 
 **Lab 1.** I detected the empty-response problem from the Assistant page and the API response, which showed one tool call but an empty answer. I traced it to Ollama returning an empty final message after the tool result. The fix added a clear fallback response stating that no matching events were found, followed by focused regression tests and a frontend build check. I also documented the limitation that the event-search tool does not directly filter by computer-science major.
+
+### Vrishin — Lab 2 example
+
+Detection and correction: I inspected the sanitized producer/worker error output, identified the unsupported configuration option, removed `delivery_timeout_ms` from `backend/app/core/kafka.py`, reran the producer and memory tests, and repeated the demonstration successfully. The final run published to `p16.memory.consolidate`, processed the event, removed duplicates, resolved contradictions, and produced zero consumer lag.
 
 The error appeared in the Python command output before the experiment ran, so no experiment result was accepted from that attempt. The script was corrected to add its backend directory to `sys.path` when run directly. It was then rerun with the deterministic fake Ollama client and isolated SQLite database.
 

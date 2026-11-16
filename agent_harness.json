@@ -1,6 +1,6 @@
 {
   "harness": "pair16-agent-harness",
-  "run_at": "2026-11-14T07:48:37-08:00",
+  "run_at": "2026-11-15T14:44:20-08:00",
   "summary": {
     "total": 20,
     "passed": 20,
@@ -43,7 +43,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "0bd7f4cf-836f-48b8-93a3-09e43bf1d5da",
+      "trace_id": "a1d74357-36d1-4fd4-b79e-6f1d5f999401",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 603,
@@ -77,7 +77,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 1.34,
+      "latency_ms": 1.31,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -85,7 +85,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "1f3d0be4-3262-47bb-80b0-3ea3b66bc228",
+      "trace_id": "915ffcda-5639-4be1-b423-b9176ef65b9e",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 501,
@@ -123,7 +123,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.28,
+      "latency_ms": 0.27,
       "iterations": 3,
       "tool_call_count": 2,
       "tools_called": [
@@ -132,7 +132,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "a235890f-9cf5-438d-bda4-e7e319fc341d",
+      "trace_id": "eb39fc8c-0c58-47e5-8bab-951dadb3adc6",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 835,
@@ -174,7 +174,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.51,
+      "latency_ms": 0.5,
       "iterations": 3,
       "tool_call_count": 2,
       "tools_called": [
@@ -183,7 +183,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "746e49da-a2e1-4226-bf28-f14b6aea9493",
+      "trace_id": "4715e8dc-1aa5-49a9-9015-12e268212b34",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 997,
@@ -229,7 +229,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "86275927-d870-41cd-8dce-952ac1639421",
+      "trace_id": "5dcf11d4-ce70-42f6-8a71-3757dd54f8b1",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 530,
@@ -271,7 +271,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "ce832261-7903-4a14-8944-90ede5e98c74",
+      "trace_id": "5ab4e013-a0fb-4145-9ea9-85ad96ce4cf6",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 536,
@@ -305,7 +305,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.33,
+      "latency_ms": 0.32,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -313,7 +313,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "4125806b-869d-4a0c-906f-daf014dde245",
+      "trace_id": "baa7b225-800c-4b2c-92c0-fb51f1529c13",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 649,
@@ -360,7 +360,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "0186a072-a8ac-4923-a080-ef1a90ad2823",
+      "trace_id": "24cc34bb-9f5b-4d59-a706-23bc7b91c83f",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 1093,
@@ -400,7 +400,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "607da246-03b2-4bbc-a64c-931910b4cf2a",
+      "trace_id": "c3639045-18ee-4c74-a09a-4ce39fab4f26",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 224,
@@ -454,7 +454,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": "iteration_ceiling",
-      "trace_id": "ebd8c5ec-64d1-4eb1-9b4f-9f55872f6931",
+      "trace_id": "ab4b2847-f97a-4383-9c1c-7990654d86fd",
       "token_usage": {
         "model_calls": 5,
         "prompt_tokens": 2685,
@@ -501,7 +501,7 @@
       ],
       "repair_attempts": 1,
       "failure_mode": null,
-      "trace_id": "b5b669b7-9e1d-4645-90cf-38800882459d",
+      "trace_id": "a91a98c7-0fde-4b02-94a8-f7c7fb2c0c93",
       "token_usage": {
         "model_calls": 3,
         "prompt_tokens": 866,
@@ -541,7 +541,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": "ollama_error",
-      "trace_id": "0bc838e3-82e3-4744-9997-678f67c9bfad",
+      "trace_id": "f5d8fb8b-5f41-426b-bbd0-66c6ef9e8dfc",
       "token_usage": {
         "model_calls": 0,
         "prompt_tokens": 0,
@@ -575,7 +575,7 @@
           "passed": true
         }
       ],
-      "latency_ms": 0.47,
+      "latency_ms": 0.48,
       "iterations": 2,
       "tool_call_count": 1,
       "tools_called": [
@@ -583,7 +583,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "54c87982-819a-4e39-85aa-627733377ba9",
+      "trace_id": "c672ebcc-c9e1-45c7-b50a-cba5d5e38b98",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 597,
@@ -635,7 +635,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "fe5ce30f-c191-49f8-a237-3b3931d6a06f",
+      "trace_id": "4c6d99e7-7a74-436d-b198-6980ec6c2682",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 2000,
@@ -679,7 +679,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "7e3a5111-eabe-49e1-8938-a0dbc667bf20",
+      "trace_id": "501e3f07-8b9d-4fd0-9c04-4537fc68a099",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 6000,
@@ -739,7 +739,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "429023db-3e62-478e-b76f-28cf70fd1f5b",
+      "trace_id": "32d12dd5-130c-45b5-9da7-fd7f2985364a",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 1150,
@@ -825,7 +825,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "5a4761c6-52a6-40dd-bea6-4bc62d23d245",
+      "trace_id": "a4385e13-ebeb-4cc2-807b-3cf2b19be3a8",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 219,
@@ -877,7 +877,7 @@
       "tools_called": [],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "8263edab-97b8-46ee-9ee5-6972d20972da",
+      "trace_id": "48d0afd7-8cb1-44c7-b461-e34bf83b4cb9",
       "token_usage": {
         "model_calls": 1,
         "prompt_tokens": 398,
@@ -923,7 +923,7 @@
       ],
       "repair_attempts": 0,
       "failure_mode": null,
-      "trace_id": "6df4e456-b51b-4ef9-afc5-80de170bcedd",
+      "trace_id": "53c9563b-888f-42f1-af2e-8f2691aa5d3d",
       "token_usage": {
         "model_calls": 2,
         "prompt_tokens": 866,

@@ -1,0 +1,116 @@
+Lab 2 EKS application deployment report
+Date: 2026-11-16
+
+Repository
+- Clean clone: C:\Projects\lab1-data260-alyssa-lab2
+- Branch: alyssa-lab2
+- HEAD: 01dfbb3
+- No tracked source files were modified.
+- Existing untracked AWS evidence files were preserved.
+
+Images
+- Eight application images rebuilt successfully.
+- Eight ECR repositories contain the 01dfbb3 tag.
+- Frontend runtime image was additionally built with same-origin API paths and pushed with tag 01dfbb3-runtime.
+- No credentials were committed or written to repository files.
+
+Infrastructure deployment
+- p16 namespace, ConfigMap, runtime Secret, gp3 StorageClass, PVCs, MySQL, MongoDB, and Kafka were applied.
+- All three infrastructure PVCs became Bound.
+- MySQL, MongoDB, and Kafka became Ready in EKS.
+
+Application deployment
+- Gateway, frontend, student, company, job, application, event, and assistant Deployments/Services were applied.
+- Gateway Service was rendered as a public LoadBalancer.
+- Existing memory-worker entry point was applied as a temporary Deployment using the assistant image.
+- Gateway, frontend, student, and company workloads became Ready.
+- Job, application, event, assistant, and memory-worker pods remain Pending.
+
+Capacity evidence
+- Pending pod scheduler reason: Insufficient memory on both nodes.
+- No preemption victims were available.
+- Both t3.small nodes advertise approximately 1.4Gi allocatable memory and max-pods capacity 11.
+
+Blocked capacity change
+- A single conditional request was made to scale p16-lab2-workers to 3 t3.small nodes.
+- AWS denied eks:UpdateNodegroupConfig for the node-group resource.
+- No node-group scaling occurred.
+- No IAM policy was changed.
+- No retry was performed.
+
+Current result
+- Deployment is partially applied but not fully ready because the remaining workloads require additional schedulable memory.
+- Required next action: administrator review/grant of the narrowly scoped eks:UpdateNodegroupConfig permission, or an approved alternative capacity plan.
+- No application end-to-end login/job-search test was attempted.
+- No screenshot was captured during this blocked deployment step.
+
+Capacity resolution and current deployment state
+- Pair16EKSDeployTemporary policy: attached, default version v3.
+- eks:UpdateNodegroupConfig simulation: allowed.
+- Pending pod evidence showed five workloads blocked by insufficient memory.
+- Managed node group was scaled once from 2 to 3 t3.small nodes; desired/min/max are now 3/3/3.
+- Third node became Ready.
+- Job, application, event, assistant, and memory-worker pods all became Running/Ready.
+- Gateway LoadBalancer health endpoint: HTTP 200.
+- Gateway frontend root request: HTTP 200.
+
+Smoke-test blocker
+- Read-only MySQL inspection found no users table in p16_handshake.
+- The deployed Kubernetes manifests initialize MySQL but do not apply the application schema or seed data.
+- Login and job-search smoke testing was not executed because the database schema/data prerequisite is absent.
+- No SQL migration, seed, database reset, or destructive database command was run.
+- No screenshot was captured for the blocked smoke test.
+
+Database initialization attempt
+- MySQL pod/service preflight: Ready and reachable.
+- Database target: p16_handshake.
+- Schema files 01_create_database.sql, 02_schema.sql, 03_lab1_seed_compatibility.sql, and 04_event_schema_compatibility.sql applied once in documented order.
+- database/05_company_workflow.sql failed on its documented first execution with: duplicate column name company_id.
+- Seed command: not run because schema initialization failed.
+- Post-initialization verification and login/job-search smoke test: not run.
+- No retry, reset, seed, IAM change, or Kubernetes resource change was performed after the failure.
+
+Continuation and seed attempt
+- database/05_company_workflow.sql: recorded as SKIPPED because its company_id alterations already exist.
+- Later-numbered SQL files after file 05: none found.
+- No remaining schema file was applied.
+- Documented seed command: not started because the approved local Python interpreter was missing.
+- Clean-clone .venv: absent.
+- Original-repository .venv: absent.
+- System Python: present but pymysql unavailable.
+- No dependency installation was attempted.
+- No seed data was written in this attempt.
+- Table/count verification and login/job-search smoke test: not run.
+
+Database seed completion
+- Supported generator inspected: backend/scripts/generate_seed_data.py.
+- Project requirements were installed only in a temporary virtual environment outside the repository; system Python was not modified.
+- Running application pod did not contain the supported generator, so the temporary environment path was used.
+- Supported load command was run exactly once with process-scoped database settings and the existing MySQL pod reached through a temporary port-forward:
+  python scripts/generate_seed_data.py --host 127.0.0.1 --port 13306 --user root --database p16_handshake --reset --confirm-reset
+- Seed command exit code: 0.
+- Seed result: 250 users, 200 student profiles, 50 company profiles, 300 jobs, 1,500 applications, 100 events, and 1,482 event registrations.
+- Generator validation passed for counts, cities, foreign keys, and duplicates.
+- Post-seed database counts matched the reported seed result.
+- Application Deployments and the memory-worker Deployment remained Ready.
+- Login smoke test: HTTP 200.
+- Authenticated job-search smoke test: HTTP 200; 132 results returned for the tested search.
+- Passwords, JWTs, Kubernetes Secret values, and private response data were not written to this report.
+
+Final deployment evidence
+- All application Deployments were Ready at 1/1: gateway, frontend, student, company, job, application, event, assistant, and memory-worker.
+- Gateway URL: http://a8920039bdbfa4d7d88e8e89ce84e164-502302468.us-east-1.elb.amazonaws.com
+- Gateway Service type: LoadBalancer.
+- Gateway /health: HTTP 200.
+- Gateway /: HTTP 200.
+- Login: HTTP 200.
+- Authenticated job search: HTTP 200; 132 results returned.
+- Database counts remained available: users 250, student_profiles 200, company_profiles 50, jobs 300, applications 1500, events 100, event_registrations 1482.
+- NAT Gateway count: 0.
+- Screenshot automation was unavailable in this session; no screenshot files were fabricated. Manual captures are required for the gateway homepage/health, login success, and job-search results.
+
+Verified deployment screenshots
+- gateway-homepage.png: present, valid PNG, shows the gateway homepage and LoadBalancer URL.
+- login-success.png: present, valid PNG, shows the authenticated student dashboard; no password, token, Secret value, or private key is visible. The seeded demo email is visible in the header.
+- job-search-results.png: present, valid PNG, shows authenticated job-search results; no password, token, Secret value, or private key is visible.
+- Verified LoadBalancer URL: http://a8920039bdbfa4d7d88e8e89ce84e164-502302468.us-east-1.elb.amazonaws.com

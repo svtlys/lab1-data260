@@ -1,0 +1,68 @@
+Lab 2 AWS read-only cost audit
+Date: 2026-11-16
+Profile: p16-lab2
+Region: us-east-1
+
+Scope and safety
+- Read-only AWS CLI and Cost Explorer queries only.
+- No resources were stopped, deleted, scaled, or modified.
+- Account IDs, ARNs, credentials, payment information, and IP addresses are omitted.
+
+Exact billing data returned
+- Cost Explorer query period: 2026-11-01 through 2026-11-16 inclusive (API end date 2026-11-17).
+- Cost Explorer API call succeeded.
+- Returned service rows were all 0 USD: CloudFormation, Glue, ECR, EC2 - Other, EC2 - Compute, EKS, S3, and VPC.
+- No separate ELB service row was returned.
+- The Cost Explorer total field was empty rather than a usable numeric total.
+- Therefore, exact month-to-date charges are not currently available from this account response. The zero-valued result is inconsistent with the live resources below and is treated as billing ingestion/reporting delay, not as proof that the deployment is free.
+- No Cost Explorer value was fabricated for EKS, EC2, EBS, ELB, public IPv4, or ECR.
+
+Current billable resource inventory
+- EKS: 1 ACTIVE cluster, Kubernetes 1.34, standard-support pricing assumed for the estimate.
+- Managed node group: 1 ACTIVE node group, desired/min/max 3/3/3.
+- EC2: 3 running t3.small worker instances.
+- Public IPv4: 3 observed on the worker instances. The internet-facing Classic Load Balancer uses two subnets and consumes managed public IPv4 addresses; its exact address count was not exposed by the EIP inventory query.
+- EBS: 6 in-use gp3 volumes totaling 75 GiB: three 20-GiB worker roots and three 5-GiB Kubernetes data volumes.
+- Load balancing: 1 internet-facing Classic Load Balancer across 2 Availability Zones.
+- NAT Gateways: 0.
+- Elastic IP inventory: 0 separately allocated EIPs.
+- VPC endpoints: none returned by the inventory query.
+- ECR: 8 private Pair 16 repositories with scan-on-push enabled; 51 image manifests were reported. The sum of reported manifest sizes was approximately 1.628 GiB; actual billed storage can be lower because ECR deduplicates shared layers.
+- No RDS, DocumentDB, MSK, Fargate, or additional Pair 16 billable service was found in this audit.
+
+Estimate assumptions
+- EKS standard-support cluster charge: $0.10 per cluster-hour.
+- EC2 t3.small Linux On-Demand estimate: $0.0209 per instance-hour.
+- Classic Load Balancer estimate: $0.025 per load-balancer-hour, excluding data processed.
+- Public IPv4 estimate: $0.005 per in-use address-hour; the baseline uses three worker addresses plus two load-balancer subnet addresses.
+- gp3 storage estimate: $0.08 per GiB-month for 75 GiB, with baseline gp3 IOPS/throughput included.
+- ECR storage estimate: $0.10 per GiB-month applied conservatively to the reported 1.628 GiB manifest-size sum; shared-layer deduplication may reduce this.
+- Excluded from the estimate: data transfer, ELB data processing, NAT processing, CloudWatch, taxes, support plans, credits, discounts, and any unrelated account resources.
+
+Estimated current steady-state run rate
+- Estimated baseline: approximately $0.2211 per hour.
+- 4 hours: approximately $0.88.
+- 10 hours: approximately $2.21.
+- 24 hours: approximately $5.31.
+- 48 hours: approximately $10.61.
+- 7 days: approximately $37.15.
+
+Estimated usage since deployment start
+- EKS cluster creation observed at 2026-11-15 02:50:49 -08:00.
+- Based on observed launch/creation timestamps and the assumptions above, estimated infrastructure usage since cluster creation is approximately $2.54.
+- This is an estimate, not an AWS invoice or Cost Explorer result.
+- At the current baseline, the $10 threshold is approximately 33.7 hours from the audit point, and the $15 cap is approximately 56.3 hours from the audit point.
+- From zero accumulated usage, the same baseline reaches $10 in approximately 45.2 hours and $15 in approximately 67.8 hours.
+
+Credits and billing caveats
+- AWS Free Tier, new-account credits, promotional credits, negotiated rates, and tax treatment were not inspected and must not be assumed.
+- Such credits could reduce the actual bill, but only the Billing/Cost Management account view can confirm their availability and application.
+- Cost Explorer data may lag live resource creation; recheck after billing data posts before treating the exact amount as final.
+
+Pricing references used for estimates
+- https://aws.amazon.com/eks/pricing/
+- https://aws.amazon.com/ec2/instance-types/t3/
+- https://aws.amazon.com/elasticloadbalancing/pricing/
+- https://aws.amazon.com/vpc/pricing/
+- https://aws.amazon.com/ebs/pricing/
+- https://aws.amazon.com/ecr/pricing/

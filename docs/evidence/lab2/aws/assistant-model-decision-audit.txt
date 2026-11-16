@@ -1,0 +1,59 @@
+Assistant model configuration audit
+Date: 2026-11-16
+Profile: p16-lab2
+Region: us-east-1
+
+Safety
+- Read-only inspection only.
+- No code, Kubernetes resources, IAM, Secrets, or AWS resources were modified.
+- Secret values, registry account identifiers, ARNs, tokens, and credentials were not displayed.
+
+Live cluster state
+- EKS cluster status: ACTIVE.
+- Worker-node count: 0 because the deployment was paused safely.
+- p16-assistant-service Deployment remains defined with replicas=1.
+- Current assistant pod is Pending because no worker node is available.
+- No AWS-pod connectivity test was attempted; creating capacity or a temporary test pod would change the paused deployment state.
+
+Assistant Deployment and image
+- Deployment: p16-assistant-service.
+- Service: p16-assistant-service, ClusterIP, port 8000 to the HTTP container.
+- Live image repository: private ECR p16-assistant-service.
+- Live image tag: 01dfbb3.
+- Repository manifest uses the local-validation placeholder image p16-assistant-service:local and imagePullPolicy IfNotPresent; the live deployment was rendered with the private ECR image.
+- Assistant container entrypoint is the assistant FastAPI service on port 8000.
+- Readiness and liveness probes target /health.
+- Resource request/limit in the committed manifest: 100m/500m CPU and 128Mi/512Mi memory.
+
+Model/provider configuration
+- Provider: Ollama, selected by the OllamaClient implementation.
+- OLLAMA_MODEL: qwen3:8b.
+- OLLAMA_BASE_URL: http://host.docker.internal:11434.
+- OLLAMA_TIMEOUT_SECONDS: 120.
+- Assistant context budget in backend configuration: 8192 tokens.
+- The live Deployment imports non-secret settings from ConfigMap p16-config.
+- The live Deployment imports runtime credentials from Secret p16-secrets; only the reference and key names were inspected, never values.
+- No separate remote model endpoint or model API credential was found in the inspected Deployment/ConfigMap wiring.
+
+Kubernetes manifest findings
+- k8s/01-config.yaml defines the same Ollama URL, model, and timeout as the live ConfigMap.
+- k8s/10-app-services.yaml defines p16-assistant-service as a ClusterIP service and imports p16-config plus p16-secrets through envFrom.
+- The committed Secret template contains placeholders only; no Secret data was printed.
+- The deployed assistant image and runtime Secret were applied from the previously rendered deployment workflow, not by changing these repository manifests during this audit.
+
+Backend endpoint
+- Assistant API route: POST /api/assistant/chat.
+- The route is authenticated and uses the AssistantLoop with OllamaClient.
+- The assistant service is internal ClusterIP; external access is expected through the gateway routing layer when worker capacity is running.
+
+Provider reachability decision
+- Reachability from an AWS pod is currently unverified because the only assistant pod is Pending and there are zero worker nodes.
+- The configured hostname host.docker.internal is a local Docker Desktop host fallback documented for local development/Compose. It is not evidence of a reachable Ollama service from EKS.
+- No reachable remote model endpoint was configured or verified in AWS.
+- The assistant model should therefore be documented as unavailable in the paused AWS deployment until a reachable provider endpoint is explicitly configured through Kubernetes Secret/ConfigMap values and tested from a running pod.
+
+Repository Ollama fallback documentation
+- README documents local Ollama as the development model runtime.
+- README names qwen3:8b and instructs starting Ollama separately for assistant testing.
+- Docker Compose defaults OLLAMA_BASE_URL to host.docker.internal:11434 and OLLAMA_MODEL to qwen3:8b.
+- This is a local fallback, not an AWS-hosted model service.

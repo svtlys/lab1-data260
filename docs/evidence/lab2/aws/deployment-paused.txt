@@ -1,0 +1,33 @@
+Lab 2 deployment paused safely
+Date: 2026-11-16
+Repository: C:\Projects\lab1-data260-alyssa-lab2
+
+Preflight
+- Final Git commit: c0ddc15.
+- Remote branch alyssa-lab2 pointed to c0ddc15 before the pause.
+- Managed node group: p16-lab2-workers.
+- Gateway Service: p16-gateway, type LoadBalancer, port 80.
+- Existing PVCs before the pause: p16-kafka-data, p16-mongo-data, p16-mysql-data; all were Bound.
+
+Actions performed
+- Updated only p16-lab2-workers scaling configuration to min=0, desired=0, max=3.
+- Waited until the Kubernetes worker-node count reached 0 and the node-group Auto Scaling Group had zero in-service instances.
+- Deleted only the Kubernetes Service p16-gateway.
+- Did not delete the gateway Deployment.
+
+Final verification
+- Worker node count: 0.
+- Managed node group scaling: min=0, desired=0, max=3.
+- Gateway Service present: false.
+- Classic LoadBalancer count: 0.
+- ELBv2 LoadBalancer count: 0.
+- NAT Gateway count: 0.
+- EKS cluster status: ACTIVE.
+- PVCs remain present and Bound: p16-kafka-data, p16-mongo-data, p16-mysql-data.
+- Deployments remain defined: p16-application-service, p16-assistant-service, p16-company-service, p16-event-service, p16-frontend, p16-gateway, p16-job-service, p16-memory-worker, p16-student-service.
+- StatefulSets remain defined: p16-kafka, p16-mongo, p16-mysql.
+- Pair 16 ECR repository count remains 8.
+
+Preserved resources
+- EKS cluster, VPC, subnets, IAM, Deployments, StatefulSets, PVCs, EBS volumes, ECR repositories, and database data were not deleted or modified.
+- No AWS resources other than the approved managed-node-group scale change and the load balancer Service deletion were changed.

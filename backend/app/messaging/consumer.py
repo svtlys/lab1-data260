@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Callable, Iterable
 
 from app.messaging.envelope import EventEnvelope, create_envelope
@@ -137,6 +137,12 @@ def process_record(
     """process one record with idempotency, retries, DLQ, and manual commit."""
 
     envelope = decode_envelope(record.value)
+    # queue wait: how long the event sat in Kafka before this worker took it (publish time -> now)
+    queue_wait_ms = round((datetime.now(timezone.utc) - envelope.occurred_at).total_seconds() * 1000, 1)
+    logger.info(
+        "kafka_event_received event_type=%s event_id=%s trace_id=%s queue_wait_ms=%s",
+        envelope.event_type, envelope.event_id, envelope.trace_id, queue_wait_ms,
+    )
     if is_event_processed(database, str(envelope.event_id)):
         consumer.commit()
         return ProcessingResult("duplicate_skipped", 0, True)

@@ -5,7 +5,7 @@
 #   ./run_tests.sh local  [host] [port] [protocol]     the real runs against your laptop (defaults 127.0.0.1 9160 http)
 #   ./run_tests.sh aws    <elb-hostname> 80 http       the real runs against the deployed gateway
 #
-# real runs: login, job search and application submission at 100/200/300/400/500 users, then the
+# real runs: login, job search, application submission, event search and event registration at 100/200/300/400/500 users, then the
 # assistant at 5/10/20/50 users. Results land in results/<label>/<plan>_<users>.jtl.
 # make it shorter while testing, for example:  DURATION=60 RAMP=15 ./run_tests.sh local
 # only some plans or user levels:              PLANS=assistant A_USERS="20 50" ./run_tests.sh local
@@ -28,7 +28,7 @@ DURATION="${DURATION:-120}"        # seconds each CRUD run lasts (including the 
 RAMP="${RAMP:-30}"                 # seconds to bring all users in
 A_DURATION="${A_DURATION:-300}"    # the assistant is slow (a local model), so its runs are longer
 A_RAMP="${A_RAMP:-20}"
-PLANS="${PLANS:-login job_search apply assistant}"
+PLANS="${PLANS:-login job_search apply event_search event_register assistant}"
 USERS="${USERS:-100 200 300 400 500}"        # user levels for login, job search and apply
 A_USERS="${A_USERS:-5 10 20 50}"              # user levels for the assistant
 JMETER="${JMETER:-jmeter}"

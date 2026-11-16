@@ -8,7 +8,7 @@ JMeter plans for Pair 16. Install JMeter once: `brew install jmeter` (needs Java
 4. Real runs: `./run_tests.sh local` (or `./run_tests.sh aws <elb-hostname> 80`)
 5. Numbers and graphs: `python summarize.py local`
 
-Plans: `login.jmx`, `job_search.jmx`, `apply.jmx` (100 to 500 users) and `assistant.jmx` (5, 10, 20, 50 users).
+Plans: `login.jmx`, `job_search.jmx`, `apply.jmx`, `event_search.jmx`, `event_register.jmx` (100 to 500 users) and `assistant.jmx` (5, 10, 20, 50 users). Event registration returns 201 (registered), 409 (already registered or full) or 403 (not eligible); all three count as correct answers, and the response-code mix is in the summary JSON. Registrations are saved, so later runs see more 409s; reseed the database to reset.
 See the comments in `run_tests.sh` for the options (shorter runs, only some plans, JMeter HTML report).
 
 ## Notes from the real runs

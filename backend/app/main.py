@@ -17,7 +17,11 @@ from app.api.routes.events import router as events_router
 from app.api.routes.jobs import company_router as company_jobs_router
 from app.api.routes.jobs import student_router as jobs_router
 from app.api.routes.student_profile import router as student_profile_router
+from app.core.logging_config import configure_logging
 from app.core.mongo import close_mongo_client
+
+configure_logging()
+
 
 
 @asynccontextmanager

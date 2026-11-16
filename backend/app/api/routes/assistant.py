@@ -12,8 +12,16 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import require_student
-from app.assistant.context import clean_trace_id
+from app.assistant.compaction import (
+    COMPACT_MARKER,
+    compact_conversation,
+    compact_mongo_conversation,
+    format_compaction_answer,
+    is_compact_command,
+)
+from app.assistant.context import COMPACT_FRACTION, clean_trace_id
 from app.assistant.loop import AssistantLoop, AssistantRunResult
+from app.assistant.tracing import StageTimes, start_sql_timer, sql_ms_now, summarize_stages
 from app.assistant.memory import (
     build_memory_context,
     get_memory_database,
@@ -74,7 +82,8 @@ def load_history(
     return [
         {"role": message.role, "content": message.content}
         for message in db.scalars(statement).all()
-        if message.role != "system"
+        # system rows are not replayed, except the summary that /compact stored in place of old history
+        if message.role != "system" or message.content.startswith(COMPACT_MARKER)
     ]
 
 
@@ -105,6 +114,35 @@ def normalize_json_value(value: Any) -> Any:
         return str(value)
 
 
+def finish_trace(timer: StageTimes, trace_id: str, outcome: str, result: AssistantRunResult | None = None) -> tuple[dict, list]:
+    """work out the stage breakdown for this request and log it as one line carrying the trace id."""
+    loop_ms = (result.stage_ms or {}) if result is not None else {}
+    stages = summarize_stages(
+        model_ms=loop_ms.get("model_inference", 0.0),
+        tool_total_ms=loop_ms.get("tool_total", 0.0),
+        tool_sql_ms=loop_ms.get("tool_sql", 0.0),
+        sql_total_ms=sql_ms_now(),
+        memory_ms=timer.totals.get("memory_store", 0.0),
+        total_ms=timer.now_ms(),
+    )
+    logger.info(
+        "assistant_trace trace_id=%s outcome=%s total_ms=%s model_ms=%s database_ms=%s tool_ms=%s memory_ms=%s other_ms=%s",
+        trace_id, outcome, stages["total"], stages["model_inference"], stages["database_queries"],
+        stages["tool_execution"], stages["memory_store"], stages["other"],
+    )
+    return stages, timer.spans
+
+
+def mirror_compaction_to_mongo(conversation_id: int, info: dict, trace_id: str) -> None:
+    """keep the Mongo copy of the conversation in step with the compaction; never break the chat."""
+    if get_mongo_database() is None:
+        return
+    try:
+        compact_mongo_conversation(get_memory_database(), conversation_id, info["summary"], info)
+    except Exception:
+        logger.exception("could not mirror the compaction to mongo trace_id=%s", trace_id)
+
+
 @router.post("/chat", response_model=AssistantChatResponse)
 def chat_with_assistant(
     request: AssistantChatRequest,
@@ -114,6 +152,8 @@ def chat_with_assistant(
 ):
     """run one bounded assistant turn and persist its conversation trace."""
 
+    timer = StageTimes()
+    start_sql_timer()
     student_profile = find_student_profile(current_user, db)
     conversation = None
 
@@ -144,6 +184,30 @@ def chat_with_assistant(
     # use the caller's X-Trace-Id when it is a safe value, otherwise start a new trace
     trace_id = clean_trace_id(x_trace_id)
     memory_database = get_memory_database()
+    if is_compact_command(request.message):
+        # /compact replaces the stored history with a summary; handled here, without the model
+        info = compact_conversation(db, conversation.id)
+        if info["compacted"]:
+            mirror_compaction_to_mongo(conversation.id, info, trace_id)
+        logger.info(
+            "assistant_compact_command tokens_before=%s tokens_after=%s trace_id=%s",
+            info["tokens_before"], info["tokens_after"], trace_id,
+        )
+        return AssistantChatResponse(
+            conversation_id=conversation.id,
+            answer=format_compaction_answer(info),
+            iterations=0,
+            tool_call_count=0,
+            repair_attempts=0,
+            failure_mode=None,
+            reached_iteration_ceiling=False,
+            tool_calls=[],
+            created_at=conversation.created_at,
+            trace_id=trace_id,
+            token_usage=None,
+            compaction={"stored": {k: v for k, v in info.items() if k != "summary"}},
+            stage_timing_ms=finish_trace(timer, trace_id, "compact")[0],
+        )
     if is_memory_command(request.message):
         # /memory commands are handled here, without the model, so they are instant and exact
         answer = handle_memory_command(
@@ -160,7 +224,10 @@ def chat_with_assistant(
             trace_id=trace_id,
         )
     else:
+        with timer.stage("memory_store", step="build_context"):
+            memory_context = build_memory_context(memory_database, current_user.id)
         loop = AssistantLoop()
+        loop_started_ms = timer.now_ms()
         result = loop.run(
             db=db,
             student_id=current_user.id,
@@ -168,8 +235,9 @@ def chat_with_assistant(
             history=history,
             confirmed_save=request.confirm_save,
             trace_id=trace_id,
-            memory_context=build_memory_context(memory_database, current_user.id),
+            memory_context=memory_context,
         )
+        timer.merge(None, result.trace_spans, loop_started_ms)
 
     # save only the new messages from this assistant turn
     new_messages = result.messages[1 + len(history):]
@@ -208,16 +276,32 @@ def chat_with_assistant(
     # a Mongo problem must never break the chat itself
     if get_mongo_database() is not None:
         try:
-            save_conversation_turn(
-                memory_database,
-                conversation.id,
-                current_user.id,
-                new_messages,
-                trace_id=result.trace_id or trace_id,
-                token_usage=result.token_usage,
-            )
+            with timer.stage("memory_store", step="save_conversation"):
+                save_conversation_turn(
+                    memory_database,
+                    conversation.id,
+                    current_user.id,
+                    new_messages,
+                    trace_id=result.trace_id or trace_id,
+                    token_usage=result.token_usage,
+                )
         except Exception:
             logger.exception("could not save the conversation to mongo trace_id=%s", trace_id)
+
+    # automatic compaction: when this turn used more than 85% of the window, replace the stored
+    # history with a summary so the next turn starts small
+    response_compaction = result.compaction
+    if (result.token_usage or {}).get("context_fraction", 0) > COMPACT_FRACTION:
+        stored = compact_conversation(db, conversation.id)
+        if stored["compacted"]:
+            mirror_compaction_to_mongo(conversation.id, stored, trace_id)
+            logger.info(
+                "assistant_auto_compaction tokens_before=%s tokens_after=%s trace_id=%s",
+                stored["tokens_before"], stored["tokens_after"], trace_id,
+            )
+        response_compaction = {**(result.compaction or {}), "stored": {k: v for k, v in stored.items() if k != "summary"}}
+
+    stage_timing, trace_spans = finish_trace(timer, trace_id, result.failure_mode or "ok", result)
 
     return AssistantChatResponse(
         conversation_id=conversation.id,
@@ -243,5 +327,7 @@ def chat_with_assistant(
         created_at=conversation.created_at,
         trace_id=result.trace_id or trace_id,
         token_usage=result.token_usage,
-        compaction=result.compaction,
+        compaction=response_compaction,
+        stage_timing_ms=stage_timing,
+        trace_spans=trace_spans,
     )

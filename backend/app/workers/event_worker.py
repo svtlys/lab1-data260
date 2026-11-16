@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Callable
 
+from app.core.logging_config import configure_logging
 from app.core.mongo import get_mongo_database
 from app.messaging.consumer import (
     KafkaConsumerConfig,
@@ -158,6 +159,7 @@ def run_event_worker() -> None:
 def main() -> None:
     """run the event worker process."""
 
+    configure_logging()
     run_event_worker()
 
 

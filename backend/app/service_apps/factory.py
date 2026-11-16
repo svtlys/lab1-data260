@@ -6,7 +6,11 @@ from contextlib import asynccontextmanager
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.logging_config import configure_logging
 from app.core.mongo import close_mongo_client
+
+configure_logging()
+
 
 
 LAB1_CORS_ORIGINS = [

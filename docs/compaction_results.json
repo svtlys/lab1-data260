@@ -1,0 +1,133 @@
+{
+  "conversation_id": 628,
+  "first_job": {
+    "title": "Part-time Data Analyst",
+    "company": "Orbit Networks"
+  },
+  "compaction": {
+    "compacted": true,
+    "messages_before": 12,
+    "messages_after": 1,
+    "tokens_before": 1304,
+    "tokens_after": 261,
+    "percent_saved": 80.0
+  },
+  "recall": [
+    {
+      "question": "Which city did I say I wanted jobs in, and which skills did I list?",
+      "expected": [
+        "sunnyvale",
+        "python"
+      ],
+      "answer": "The city you mentioned for jobs is **Sunnyvale**, and the skills you listed are **Python** and **SQL**. Let me know if you'd like to refine your search!",
+      "passed": true
+    },
+    {
+      "question": "What was the first job you found for me, and at which company?",
+      "expected": [
+        "orbit networks"
+      ],
+      "answer": "The first job I found for you was **Job 29: Part-time Data Analyst at Orbit Networks** in Sunnyvale. Let me know if you'd like details about this role!",
+      "passed": true
+    }
+  ],
+  "all_recall_passed": true,
+  "turns": [
+    {
+      "message": "I want remote data analyst jobs near Sunnyvale. I know Python and SQL.",
+      "seconds": 64.3,
+      "tokens": {
+        "model_calls": 2,
+        "prompt_tokens": 1851,
+        "completion_tokens": 1074,
+        "total_tokens": 2925,
+        "context_budget": 8192,
+        "context_used": 1206,
+        "context_fraction": 0.147,
+        "peak_fraction": 0.21,
+        "warning_threshold": 0.7,
+        "warning": false,
+        "estimated": false
+      },
+      "answer": "There are no remote data analyst jobs currently listed in Sunnyvale that match your skills in Python and SQL. Would you like to adjust your search criteria (e.g., consider different locations, job types, or skills) to find opportunities?"
+    },
+    {
+      "message": "Search for data analyst jobs in Sunnyvale and list the first three.",
+      "seconds": 63.6,
+      "tokens": {
+        "model_calls": 2,
+        "prompt_tokens": 2607,
+        "completion_tokens": 933,
+        "total_tokens": 3540,
+        "context_budget": 8192,
+        "context_used": 2057,
+        "context_fraction": 0.251,
+        "peak_fraction": 0.251,
+        "warning_threshold": 0.7,
+        "warning": false,
+        "estimated": false
+      },
+      "answer": "Here are the first three data analyst jobs in Sunnyvale:\n\n1. **Part-time Data Analyst** at Orbit Networks  \n   - Skills needed: SQL (you\u2019ve got this!), PostgreSQL, MySQL, Java  \n   - Salary: $36k\u2013$43k/year  \n   - Posted: October 2026  \n\n2. **Data Analyst Intern** at Pioneer Robotics (\u2705 Remote!)  \n   - Skills needed: Python (you\u2019re qualified!), MySQL, FastAPI, TypeScript  \n   - Salary: $66k\u2013$89k/ye"
+    },
+    {
+      "message": "Are there any career fairs or events I could attend?",
+      "seconds": 49.8,
+      "tokens": {
+        "model_calls": 2,
+        "prompt_tokens": 4050,
+        "completion_tokens": 684,
+        "total_tokens": 4734,
+        "context_budget": 8192,
+        "context_used": 2722,
+        "context_fraction": 0.332,
+        "peak_fraction": 0.332,
+        "warning_threshold": 0.7,
+        "warning": false,
+        "estimated": false
+      },
+      "answer": "Here are upcoming career events in Sunnyvale:  \n\n1. **Bright Health Startup Founders Panel** (August 28, 2026)  \n   - In-person at Bright Health office  \n   - Type: Panel  \n\n2. **Atlas Energy Mentor Mixer** (August 28, 2026)  \n   - Virtual (Online)  \n   - Type: Networking  \n\n3. **Orbit Security Women in Tech Panel** (August 28, 2026)  \n   - Virtual (Online)  \n   - Type: Panel  \n\nWould you like det"
+    },
+    {
+      "message": "/compact",
+      "seconds": 0.0,
+      "tokens": null,
+      "answer": "**Conversation compacted.** 12 stored messages (about 1304 tokens) were replaced by one summary (about 261 tokens), 80.0% smaller. Ask me about anything we discussed and I will answer from the summary.\n\n```\nconversation summary (earlier messages were compacted):\nnote: this is a record of the earlier chat, kept in place of the old messages. answer questions about what was said or found earlier from"
+    },
+    {
+      "message": "Which city did I say I wanted jobs in, and which skills did I list?",
+      "seconds": 24.3,
+      "tokens": {
+        "model_calls": 1,
+        "prompt_tokens": 1155,
+        "completion_tokens": 299,
+        "total_tokens": 1454,
+        "context_budget": 8192,
+        "context_used": 1454,
+        "context_fraction": 0.177,
+        "peak_fraction": 0.177,
+        "warning_threshold": 0.7,
+        "warning": false,
+        "estimated": false
+      },
+      "answer": "The city you mentioned for jobs is **Sunnyvale**, and the skills you listed are **Python** and **SQL**. Let me know if you'd like to refine your search!"
+    },
+    {
+      "message": "What was the first job you found for me, and at which company?",
+      "seconds": 25.8,
+      "tokens": {
+        "model_calls": 1,
+        "prompt_tokens": 1218,
+        "completion_tokens": 399,
+        "total_tokens": 1617,
+        "context_budget": 8192,
+        "context_used": 1617,
+        "context_fraction": 0.197,
+        "peak_fraction": 0.197,
+        "warning_threshold": 0.7,
+        "warning": false,
+        "estimated": false
+      },
+      "answer": "The first job I found for you was **Job 29: Part-time Data Analyst at Orbit Networks** in Sunnyvale. Let me know if you'd like details about this role!"
+    }
+  ]
+}

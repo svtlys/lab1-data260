@@ -27,9 +27,12 @@ PLAN_LABELS = {
     "login": "POST /api/auth/login",
     "job_search": "GET /api/jobs?search=",
     "apply": "POST /api/jobs/{id}/applications",
+    "event_search": "GET /api/events?search=",
+    "event_register": "POST /api/events/{id}/register",
     "assistant": "POST /api/assistant/chat",
 }
-TITLES = {"login": "Login", "job_search": "Job search", "apply": "Application submission", "assistant": "AI assistant"}
+TITLES = {"login": "Login", "job_search": "Job search", "apply": "Application submission",
+          "event_search": "Event search", "event_register": "Event registration", "assistant": "AI assistant"}
 
 
 def percentile(sorted_values: list[float], p: float) -> float:
@@ -79,7 +82,7 @@ def draw(results: list[dict], label: str) -> list[str]:
         return []
     written = []
 
-    crud = [p for p in ("login", "job_search", "apply") if any(r["plan"] == p for r in results)]
+    crud = [p for p in ("login", "job_search", "apply", "event_search", "event_register") if any(r["plan"] == p for r in results)]
     if crud:
         fig, (left, right) = plt.subplots(1, 2, figsize=(11, 4.2))
         for plan in crud:
@@ -91,7 +94,7 @@ def draw(results: list[dict], label: str) -> list[str]:
         for axis in (left, right):
             axis.grid(alpha=0.3)
             axis.legend()
-        fig.suptitle(f"Pair 16 load test ({label}): login, job search, application submission")
+        fig.suptitle(f"Pair 16 load test ({label}): login, job search, application, event search, event registration")
         fig.tight_layout()
         path = DOCS / f"loadtest_{label}_crud.png"
         fig.savefig(path, dpi=160)

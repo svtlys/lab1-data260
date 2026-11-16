@@ -6,6 +6,7 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Callable
 
+from app.core.logging_config import configure_logging
 from app.assistant.memory import ACTIVITY_COLLECTION, consolidate_student
 from app.core.mongo import get_mongo_database
 from app.messaging.consumer import (
@@ -132,6 +133,7 @@ class MemoryWorker:
 def main() -> None:
     """run the memory worker process (container entry point)."""
 
+    configure_logging()
     MemoryWorker().run()
 
 

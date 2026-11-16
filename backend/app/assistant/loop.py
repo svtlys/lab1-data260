@@ -19,6 +19,7 @@ from app.assistant.context import (
     clean_trace_id,
     compact_messages,
 )
+from app.assistant.tracing import StageTimes, sql_ms_now
 from app.assistant.guards import protect_instructions
 from app.assistant.tools import (
     AssistantToolError,
@@ -183,6 +184,9 @@ class AssistantRunResult:
     token_usage: dict[str, Any] | None = None
     # how many times the conversation was compacted before a model call, and the last result
     compaction: dict[str, Any] | None = None
+    # time spent in the model and the tools during this run, and the ordered spans (see tracing.py)
+    stage_ms: dict[str, float] | None = None
+    trace_spans: list[dict[str, Any]] | None = None
 
     @property
     def tool_call_count(self) -> int:
@@ -308,6 +312,7 @@ class AssistantLoop:
         trace_id = clean_trace_id(trace_id)
         tracker = TokenTracker(budget=self.context_budget)
         compaction: dict[str, Any] = {"count": 0, "last": None}
+        stages = StageTimes()
 
         def run_details() -> dict[str, Any]:
             # fields every result carries, whichever way the run ends
@@ -315,6 +320,8 @@ class AssistantLoop:
                 "trace_id": trace_id,
                 "token_usage": tracker.snapshot(),
                 "compaction": dict(compaction),
+                "stage_ms": {name: round(ms, 3) for name, ms in stages.totals.items()},
+                "trace_spans": list(stages.spans),
             }
 
         system_prompt = _system_prompt()
@@ -351,7 +358,8 @@ class AssistantLoop:
             # (found with JMeter: 20+ chats at once held every connection and logins failed with 500.)
             db.rollback()
             try:
-                response = self._complete(model_messages)
+                with stages.stage("model_inference", iteration=iteration):
+                    response = self._complete(model_messages)
             except OllamaError as error:
                 logger.error("assistant_ollama_error detail=%s trace_id=%s", error, trace_id)
                 return AssistantRunResult(
@@ -456,7 +464,12 @@ class AssistantLoop:
                             if tool_name == SAVE_TOOL_NAME:
                                 save_confirmation_declined = True
                         else:
-                            tool_result = tool_function(**arguments)
+                            sql_before = sql_ms_now()
+                            try:
+                                with stages.stage("tool_total", iteration=iteration, tool=tool_name):
+                                    tool_result = tool_function(**arguments)
+                            finally:
+                                stages.add("tool_sql", sql_ms_now() - sql_before)
                     if isinstance(tool_result, str) and tool_result.startswith("error:"):
                         log_entry["error"] = tool_result
                     elif isinstance(tool_result, str) and tool_result.startswith("cancelled:"):

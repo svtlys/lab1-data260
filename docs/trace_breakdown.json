@@ -1,0 +1,105 @@
+{
+  "requests": 0,
+  "summary": null,
+  "successful_trace": {
+    "trace_id": "trace-ok-6ef88d2d",
+    "answer": "Here are data analyst jobs in Sunnyvale:\n\n1. **Part-time Data Analyst** at Orbit Networks  \n   - Skills: PostgreSQL, C++, MySQL, SQL, Java  \n   - Salary: $36k\u2013$43k  \n   - Location: Sunnyvale, CA  \n\n2. **Data Analyst Intern** at Pioneer Robotics  \n   - Skills: MySQL, FastAPI, TypeScript, Python  \n   ",
+    "failure_mode": null,
+    "tool_calls": [
+      {
+        "tool": "search_jobs",
+        "error": null
+      }
+    ],
+    "stage_timing_ms": {
+      "model_inference": 57311.9,
+      "database_queries": 27.7,
+      "tool_execution": 7.5,
+      "memory_store": 0.5,
+      "queue_wait": 0.0,
+      "other": 19.5,
+      "total": 57367.1
+    },
+    "spans": [
+      {
+        "stage": "memory_store",
+        "start_ms": 13.2,
+        "ms": 0.5,
+        "step": "build_context"
+      },
+      {
+        "stage": "model_inference",
+        "start_ms": 13.9,
+        "ms": 15770.3,
+        "iteration": 1
+      },
+      {
+        "stage": "tool_total",
+        "start_ms": 15785.8,
+        "ms": 18.2,
+        "iteration": 1,
+        "tool": "search_jobs"
+      },
+      {
+        "stage": "model_inference",
+        "start_ms": 15805.0,
+        "ms": 41541.6,
+        "iteration": 2
+      }
+    ]
+  },
+  "failed_trace": {
+    "trace_id": "trace-failed-d0427972",
+    "answer": "The job with ID 999999 couldn't be found. Would you like to try a different job ID or check for similar opportunities?",
+    "failure_mode": null,
+    "tool_calls": [
+      {
+        "tool": "get_job_details",
+        "error": "error: job was not found"
+      }
+    ],
+    "stage_timing_ms": {
+      "model_inference": 26166.6,
+      "database_queries": 8.4,
+      "tool_execution": 4.2,
+      "memory_store": 0.8,
+      "queue_wait": 0.0,
+      "other": 13.1,
+      "total": 26193.0
+    },
+    "spans": [
+      {
+        "stage": "memory_store",
+        "start_ms": 5.3,
+        "ms": 0.8,
+        "step": "build_context"
+      },
+      {
+        "stage": "model_inference",
+        "start_ms": 6.7,
+        "ms": 8182.6,
+        "iteration": 1
+      },
+      {
+        "stage": "tool_total",
+        "start_ms": 8189.9,
+        "ms": 5.1,
+        "iteration": 1,
+        "tool": "get_job_details"
+      },
+      {
+        "stage": "model_inference",
+        "start_ms": 8195.3,
+        "ms": 17984.0,
+        "iteration": 2
+      }
+    ]
+  },
+  "kafka_trace": {
+    "trace_id": "trace-kafka-8036af89",
+    "answer": "Consolidated your memory: 0 lines before, 0 after (0 duplicates and 0 outdated answers removed).",
+    "find_it_in_the_logs": "grep trace-kafka-8036af89 loadtest/backend.log <worker log>"
+  },
+  "queue_wait": null,
+  "requests_detail": []
+}

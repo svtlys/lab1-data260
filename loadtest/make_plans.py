@@ -2,7 +2,8 @@
 build the JMeter test plans for Lab 2, Part 5.
 
 run once (from the loadtest folder):   python make_plans.py
-it writes login.jmx, job_search.jmx, apply.jmx, assistant.jmx, students.csv and resume.pdf.
+it writes login.jmx, job_search.jmx, apply.jmx, event_search.jmx, event_register.jmx, assistant.jmx,
+students.csv and resume.pdf.
 
 every plan reads its settings from JMeter properties, so the same file runs against your laptop or
 against AWS:   -Jhost  -Jport  -Jprotocol  -Jusers  -Jramp  -Jduration  -Jthink_ms
@@ -19,6 +20,7 @@ HERE = Path(__file__).resolve().parent
 SEED_PASSWORD = "Password123!"  # the demo password every seeded account shares
 N_STUDENTS = 200
 N_JOBS = 300
+N_EVENTS = 100
 
 
 def x(value: str) -> str:
@@ -232,7 +234,7 @@ def test_plan(name: str, variables: dict[str, str], groups: str) -> str:
     )
 
 
-# ----------------------------------------------------------------------------- the four plans
+# ----------------------------------------------------------------------------- the plans
 def plan_login() -> str:
     inner = login_sampler() + think_time()
     return test_plan("Login", {}, thread_group("Students logging in", inner))
@@ -254,6 +256,24 @@ def plan_apply() -> str:
                     children=auth_header() + assertion("201|409", "Status is 201 or 409", ignore_status=True))
     inner = once_only(login_sampler()) + only_if_signed_in(apply) + think_time()
     return test_plan("Application submission", {}, thread_group("Students applying", inner))
+
+
+def plan_event_search() -> str:
+    terms = {f"term{i}": t for i, t in enumerate(
+        ["Career Fair", "Workshop", "Hackathon", "Panel", "Networking", "Info Session"], 1)}
+    search = sampler("GET /api/events?search=", "GET", "/api/events",
+                     params={"search": "${__V(term${__Random(1,6)})}"}, children=auth_header() + assertion("200", "Status is 200"))
+    inner = once_only(login_sampler()) + only_if_signed_in(search) + think_time()
+    return test_plan("Event search", terms, thread_group("Students searching events", inner))
+
+
+def plan_event_register() -> str:
+    # 201 = registered; 409 = already registered or the event is full; 403 = this student is not eligible
+    # (major, CGPA or graduation year). all three are correct answers from the service, so none is an error.
+    register = sampler("POST /api/events/{id}/register", "POST", "/api/events/${__Random(1,%d)}/register" % N_EVENTS,
+                       children=auth_header() + assertion("201|403|409", "Status is 201, 403 or 409", ignore_status=True))
+    inner = once_only(login_sampler()) + only_if_signed_in(register) + think_time()
+    return test_plan("Event registration", {}, thread_group("Students registering for events", inner))
 
 
 def plan_assistant() -> str:
@@ -293,7 +313,8 @@ def tiny_pdf() -> bytes:
 
 def main() -> None:
     plans = {"login.jmx": plan_login(), "job_search.jmx": plan_job_search(),
-             "apply.jmx": plan_apply(), "assistant.jmx": plan_assistant()}
+             "apply.jmx": plan_apply(), "assistant.jmx": plan_assistant(),
+             "event_search.jmx": plan_event_search(), "event_register.jmx": plan_event_register()}
     for name, xml in plans.items():
         (HERE / name).write_text(xml, encoding="utf-8")
         print("wrote", name)

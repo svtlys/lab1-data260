@@ -47,3 +47,6 @@ class AssistantChatResponse(BaseModel):
     # token use, the 70% warning flag and compaction details for this turn
     token_usage: dict[str, Any] | None = None
     compaction: dict[str, Any] | None = None
+    # milliseconds spent in each stage of this request, and the ordered spans (see app/assistant/tracing.py)
+    stage_timing_ms: dict[str, float] | None = None
+    trace_spans: list[dict[str, Any]] | None = None

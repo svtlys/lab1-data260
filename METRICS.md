@@ -186,6 +186,16 @@ For the assistant, an HTTP 200 whose answer is only a model-timeout message coun
 | Application submission | 300 | 33585 | 0.0 | 0/300 | 21.2 | 18 | 49 | 88 | 125 | 572.28 |
 | Application submission | 400 | 31744 | 0.01 | 0/400 | 235.4 | 241 | 309 | 334 | 389 | 539.08 |
 | Application submission | 500 | 438 | 100.0 | 97/500 | 55207.8 | 60003 | 60003 | 60004 | 60005 | 4.84 |
+| Event search | 100 | 11316 | 0.0 | 0/100 | 14.5 | 12 | 31 | 61 | 106 | 192.93 |
+| Event search | 200 | 22643 | 0.0 | 0/200 | 16.2 | 11 | 49 | 108 | 210 | 385.8 |
+| Event search | 300 | 34266 | 0.0 | 0/300 | 11.3 | 9 | 21 | 75 | 135 | 585.14 |
+| Event search | 400 | 45078 | 0.0 | 0/400 | 16.1 | 12 | 51 | 80 | 137 | 768.24 |
+| Event search | 500 | 356 | 100.0 | 178/500 | 54271.9 | 60002 | 60003 | 60003 | 60004 | 3.93 |
+| Event registration | 100 | 10935 | 0.05 | 0/100 | 31.1 | 27 | 67 | 99 | 187 | 186.53 |
+| Event registration | 200 | 22082 | 0.07 | 0/200 | 28.2 | 18 | 87 | 122 | 178 | 376.5 |
+| Event registration | 300 | 34078 | 0.0 | 0/300 | 14.5 | 12 | 30 | 75 | 132 | 580.86 |
+| Event registration | 400 | 43090 | 1.02 | 2/400 | 39.2 | 23 | 116 | 199 | 643 | 733.95 |
+| Event registration | 500 | 401 | 100.0 | 134/500 | 54764.8 | 60002 | 60005 | 60006 | 60008 | 4.43 |
 | AI assistant | 5 | 5 | 40.0 | 0/5 | 125979.2 | 117700 | 180013 | 180013 | 180013 | 0.02 |
 | AI assistant | 10 | 15 | 93.33 | 0/10 | 128696.4 | 120029 | 180013 | 180013 | 180013 | 0.04 |
 | AI assistant | 20 | 20 | 95.0 | 0/20 | 128965.6 | 120026 | 180003 | 180003 | 180003 | 0.08 |
@@ -195,6 +205,11 @@ Main results:
 
 - Application submission: 0 to 0.01 % errors from 100 to 400 users (p95 at most 309 ms, 186 to 572 requests/s); fails at 500 users
   when the sign-in burst cannot be served.
+- Event search: 0 % errors from 100 to 400 users (p95 21 to 51 ms, up to 768 requests/s); fails at 500 users. Event search is one
+  query over 100 rows, so it stays fast where job search (two extra queries per job) does not.
+- Event registration: 0 to 0.07 % errors from 100 to 300 users and 1.02 % at 400 (184 HTTP 500 responses, with connection-pool
+  timeouts in the backend log); fails at 500 users. Most responses were 409 (already registered or full) or 403 (not eligible),
+  because registrations are saved between runs; see `docs/loadtest_events_analysis.md`.
 - Job search: usable at 100 users (p50 1.7 s, 47.6 requests/s) and failing from 200 users; the endpoint runs two extra
   database queries per matching job and has no result limit.
 - Login: 32.6 sign-ins/s at 100 users (p50 2.3 s, bcrypt bound) and 65-100 % errors from 200 users.
